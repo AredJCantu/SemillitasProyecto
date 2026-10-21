@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SemillasCore/SemillasCore.csproj" />
+  <Project Path="SemillitasDesktopApp/SemillitasDesktopApp.csproj" Id="6fc45897-4ff8-4f70-97a1-022724888329" />
+  <Project Path="SemillitasMobileApp/SemillitasMobileApp.csproj" />
+  <Project Path="SemillitasProyecto/SemillitasProyecto.csproj" />
+</Solution>
