@@ -45,9 +45,6 @@ public partial class SemillitasContext : DbContext
             entity.Property(e => e.Apellido)
                 .HasMaxLength(100)
                 .HasColumnName("apellido");
-            entity.Property(e => e.ApellidoTutor)
-                .HasMaxLength(100)
-                .HasColumnName("apellido_tutor");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .HasColumnName("nombre");

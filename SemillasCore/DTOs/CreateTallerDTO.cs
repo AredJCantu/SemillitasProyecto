@@ -26,7 +26,7 @@ namespace SemillasCore.DTOs
         public string NombreInstructor { get; set; } = null!;
         [Required(ErrorMessage = "Seleccione una categoria para el taller")]
         public string Categoria { get; set; } = null!;
-        [Required(ErrorMessage = "Seleccione a que periodo pertenece ese taller")]
+        [Required(ErrorMessage = "Seleccione a que periodo pertenece ese taller.")]
         public int IdPeriodo { get; set; }
     }
     public class DatosTallerDTO {
@@ -39,22 +39,7 @@ namespace SemillasCore.DTOs
     public class TallerDTO : CreateTallerDTO {
         public int Id { get; set; }
     }
-    public class EditTallerDTO
+    public class EditTallerDTO:CreateTallerDTO
     {
-        public string Nombre { get; set; } = null!;
-
-        public decimal Costo { get; set; }
-
-        public int HoraInicio { get; set; }
-
-        public int HoraFin { get; set; }
-
-        public int Cupo { get; set; }
-
-        public string NombreInstructor { get; set; } = null!;
-
-        public string Categoria { get; set; } = null!;
-
-        public int IdPeriodo { get; set; }
     }
 }
