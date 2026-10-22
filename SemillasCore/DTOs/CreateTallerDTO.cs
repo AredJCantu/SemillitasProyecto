@@ -24,4 +24,11 @@ namespace SemillasCore.DTOs
 
         public int IdPeriodo { get; set; }
     }
+    public class DatosTallerDTO {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = null!;
+    }
+    public class TallerDTO : CreateTallerDTO {
+        public int Id { get; set; }
+    }
 }
