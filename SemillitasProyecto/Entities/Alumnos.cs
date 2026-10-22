@@ -13,8 +13,6 @@ public partial class Alumnos
 
     public string NombreTutor { get; set; } = null!;
 
-    public string ApellidoTutor { get; set; } = null!;
-
     public string Telefono { get; set; } = null!;
 
     public virtual ICollection<Inscripciones> Inscripciones { get; set; } = new List<Inscripciones>();
