@@ -10,7 +10,6 @@
     <Folder Include="Controllers\" />
     <Folder Include="Mappers\" />
     <Folder Include="Commons\" />
-    <Folder Include="Repositories\" />
     <Folder Include="Services\" />
   </ItemGroup>
 

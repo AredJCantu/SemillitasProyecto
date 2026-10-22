@@ -20,5 +20,8 @@ namespace SemillasCore.DTOs
     public class AlumnoDTO:CreateAlumnoDTO {
         public int Id { get; set; }
     }
+    public class EditAlumnoDTO:CreateAlumnoDTO {
+        
+    }
     
 }
