@@ -11,7 +11,7 @@ public partial class Inscripciones
 
     public int IdTaller { get; set; }
 
-    public bool Debe { get; set; }
+    public bool? Debe { get; set; }
 
     public virtual Alumnos IdAlumnoNavigation { get; set; } = null!;
 

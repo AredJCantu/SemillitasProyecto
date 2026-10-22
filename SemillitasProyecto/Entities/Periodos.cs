@@ -7,9 +7,10 @@ public partial class Periodos
 {
     public int Id { get; set; }
 
-    public string MesInicio { get; set; } = null!;
+    public int MesInicio { get; set; } 
 
-    public string MesFin { get; set; } = null!;
+    public int MesFin { get; set; }
+    public int Año { get; set; }
 
     public virtual ICollection<Talleres> Talleres { get; set; } = new List<Talleres>();
 }
