@@ -15,10 +15,10 @@ namespace SemillasCore.DTOs
         
         public decimal Costo { get; set; }
         [Required(ErrorMessage = "El taller debe tener una hora de inicio.")]
-        [RegularExpression("^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
         public int HoraInicio { get; set; }
         [Required(ErrorMessage = "El taller debe tener una hora final.")]
-        [RegularExpression("^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
         public int HoraFin { get; set; }
         [Required(ErrorMessage = "El taller debe tener un cupo de alumnos.")]
         public int Cupo { get; set; }
@@ -28,13 +28,20 @@ namespace SemillasCore.DTOs
         public string Categoria { get; set; } = null!;
         [Required(ErrorMessage = "Seleccione a que periodo pertenece ese taller.")]
         public int IdPeriodo { get; set; }
+        [Required(ErrorMessage = "El taller debe tener una hora inicial sabatina.")]
+        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        public int HoraInicioSabado { get; set; }
+        [Required(ErrorMessage = "El taller debe tener una hora final sabatina.")]
+        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        public int HoraFinSabado { get; set; }
     }
     public class DatosTallerDTO {
         public int Id { get; set; }
         public string Nombre { get; set; } = null!;
         public int Cupo { get; set; }
         public string NombreInstructor { get; set; } = null!;
-        public string Periodo { get; set; } = null!;
+        public int IdPeriodo { get; set; }
+        public IEnumerable<AlumnoDTO>? alumnos { get; set; }
     }
     public class TallerDTO : CreateTallerDTO {
         public int Id { get; set; }
