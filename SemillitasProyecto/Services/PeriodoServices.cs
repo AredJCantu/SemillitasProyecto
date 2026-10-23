@@ -1,4 +1,5 @@
-﻿using SemillasCore.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using SemillasCore.DTOs;
 using SemillitasProyecto.Entities;
 using SemillitasProyecto.Mappers;
 using SemillitasProyecto.Repositories;
@@ -32,6 +33,7 @@ namespace SemillitasProyecto.Services
             }
             return null;
         }
+       
         public PeriodoDTO? Create(CreatePeriodoDTO dto)
         {
             Periodos entity = dto.ToEntity();

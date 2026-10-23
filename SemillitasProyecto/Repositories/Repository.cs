@@ -22,6 +22,9 @@ namespace SemillitasProyecto.Repositories
             var data = Context.Find<T>(id);
             return data;
         }
+        public IQueryable<T> Query() {
+            return Context.Set<T>().AsQueryable();
+        }
         public void Update(T entity) {
             Context.Update(entity);
             Context.SaveChanges();

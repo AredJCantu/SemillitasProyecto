@@ -14,6 +14,9 @@ builder.Services.AddDbContext<SemillitasContext>(
 
 builder.Services.AddScoped(typeof(Repository<>));
 builder.Services.AddScoped(typeof(PeriodoServices));
+builder.Services.AddScoped(typeof(AlumnoServices));
+builder.Services.AddScoped<TalleresServices>();
+builder.Services.AddScoped<InscripcionesServices>();
 
 var app = builder.Build();
 
