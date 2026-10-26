@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    ╔══════════════════════════════════════════════════════════════════════╗
+    ║  WINDOWS · INSCRIPCIONVIEW — Nueva inscripción (paso 3: talleres)     ║
+    ╚══════════════════════════════════════════════════════════════════════╝
+
+    PARA QUÉ SIRVE:
+      Inscribir a un niño en uno o varios talleres del período. Muestra todo
+      junto: talleres a la izquierda, resumen con total a la derecha.
+
+    ESTRUCTURA:
+      1) Encabezado + botón Cancelar
+      2) Indicador de pasos (Tutor → Niño → Talleres → Resumen → Pago)
+      3) Izquierda: talleres con su botón de acción
+         Derecha:   banner de error + resumen + total + botón Continuar
+
+    IDEA CLAVE:
+      La vista NO decide si un taller choca de horario o está lleno: eso lo
+      responde la API y llega en la propiedad "Accion" de cada taller:
+        "Disponible" → botón verde "Agregar"
+        "Agregado"   → botón claro "Agregado" (tocarlo = quitar)
+        "Choque"     → botón rojo "Se solapa" (bloqueado)
+        "Lleno"      → botón gris "Sin cupo" (bloqueado)
+      Los DataTrigger de abajo solo cambian la APARIENCIA según ese texto.
+
+    PROPIEDADES QUE LEE DEL BindingContext:
+      SubtituloInscripcion, NombreAlumno, TextoAgregados, Periodo, Total,
+      HayError (bool), MensajeError,
+      Pasos      (cada uno: Numero, Titulo, Estado = "Hecho"|"Actual"|"Pendiente"),
+      Talleres   (cada uno: Nombre, Horario, Badge, Tono, Accion),
+      Resumen    (cada uno: Nombre, Horario, Precio).
+
+    COMMANDS POR AGREGAR ("TODO COMMAND"):
+      Cancelar · Alternar taller (agregar/quitar) · Quitar del resumen · Continuar
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
+             x:Class="SemillitasMobileApp.Views.WindowsViews.InscripcionView"
+             Title="Nueva inscripción">
+
+    <ContentPage.Resources>
+        <!-- Colores y estilos: mismos que MainView (ver explicación allá). -->
+        <Color x:Key="Fondo">#F7F5EF</Color>
+        <Color x:Key="Blanco">#FFFFFF</Color>
+        <Color x:Key="Tinta">#1F2A24</Color>
+        <Color x:Key="TintaSuave">#5A655E</Color>
+        <Color x:Key="Linea">#E2DED2</Color>
+        <Color x:Key="BordeCampo">#CFCABB</Color>
+        <Color x:Key="Deshabilitado">#EFECE2</Color>
+        <Color x:Key="Primario">#2A6F4F</Color>
+        <Color x:Key="PrimarioOscuro">#1F3A2E</Color>
+        <Color x:Key="VerdeFondo">#DDEFE4</Color>
+        <Color x:Key="VerdeTexto">#1E5A3D</Color>
+        <Color x:Key="AmbarFondo">#FBEBC4</Color>
+        <Color x:Key="AmbarTexto">#7A4B00</Color>
+        <Color x:Key="RojoFondo">#F6D9D2</Color>
+        <Color x:Key="RojoTexto">#8E2A17</Color>
+        <Color x:Key="RojoBarra">#B23A24</Color>
+
+        <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
+
+        <Style x:Key="Titulo" TargetType="Label">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+        </Style>
+        <Style x:Key="Subtitulo" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+        <Style x:Key="Seccion" TargetType="Label">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+        </Style>
+        <Style x:Key="Etiqueta" TargetType="Label">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+        </Style>
+        <Style x:Key="Nota" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource Linea}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
+        </Style>
+
+        <Style x:Key="BotonPrimario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Primario}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="18,0" />
+        </Style>
+        <Style x:Key="BotonSecundario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="BorderColor" Value="{StaticResource BordeCampo}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="18,0" />
+        </Style>
+
+        <!-- Píldora de estado: Border + Label, el color depende de la propiedad Tono -->
+        <Style x:Key="BadgeBorder" TargetType="Border">
+            <Setter Property="HeightRequest" Value="30" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="HorizontalOptions" Value="Start" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="15" /></Setter.Value></Setter>
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Ambar">
+                    <Setter Property="BackgroundColor" Value="{StaticResource AmbarFondo}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="BackgroundColor" Value="{StaticResource RojoFondo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="BadgeTexto" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="TextColor" Value="{StaticResource VerdeTexto}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Ambar">
+                    <Setter Property="TextColor" Value="{StaticResource AmbarTexto}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ContentPage.Resources>
+
+    <!-- Barra lateral a la izquierda (232) + contenido de la página a la derecha (*) -->
+    <Grid ColumnDefinitions="232,*">
+        <wViews:MenuLateral Activo="Inscribir" />
+        <Grid Grid.Column="1">
+        <ScrollView BackgroundColor="{StaticResource Fondo}">
+            <VerticalStackLayout Spacing="16" Padding="32,24">
+
+                <!-- ═══════════ 1 · ENCABEZADO ═══════════ -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Nueva inscripción" Style="{StaticResource Titulo}" />
+                        <Label Text="{Binding SubtituloInscripcion}" Style="{StaticResource Subtitulo}" />
+                    </VerticalStackLayout>
+
+                    <!-- TODO COMMAND: CancelarCommand
+                         Qué hace: descarta la inscripción y regresa a MainView.
+                         Sugerencia: pedir confirmación si ya hay talleres agregados. -->
+                    <Button Grid.Column="1" Text="Cancelar" Style="{StaticResource BotonSecundario}"
+                            VerticalOptions="End" />
+                </Grid>
+
+                <!-- ═══════════ 2 · INDICADOR DE PASOS ═══════════
+                     BindableLayout convierte un layout normal en "lista": repite la
+                     plantilla por cada elemento de Pasos. (Se usa en vez de
+                     CollectionView cuando son pocos elementos, sin scroll ni selección.) -->
+                <Border Style="{StaticResource Tarjeta}" Padding="20,12">
+                    <HorizontalStackLayout Spacing="40" BindableLayout.ItemsSource="{Binding Pasos}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <HorizontalStackLayout Spacing="10">
+                                    <!-- Círculo con el número; su color depende de Estado -->
+                                    <Border WidthRequest="32" HeightRequest="32" StrokeThickness="2"
+                                            Stroke="#B8B3A3" BackgroundColor="Transparent"
+                                            StrokeShape="RoundRectangle 16" VerticalOptions="Center">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Estado}" Value="Hecho">
+                                                <Setter Property="BackgroundColor" Value="{StaticResource Primario}" />
+                                                <Setter Property="Stroke" Value="{StaticResource Primario}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Border" Binding="{Binding Estado}" Value="Actual">
+                                                <Setter Property="BackgroundColor" Value="{StaticResource PrimarioOscuro}" />
+                                                <Setter Property="Stroke" Value="{StaticResource PrimarioOscuro}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        <Label Text="{Binding Numero}" FontAttributes="Bold" FontSize="14"
+                                               HorizontalOptions="Center" VerticalOptions="Center"
+                                               TextColor="{StaticResource TintaSuave}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Estado}" Value="Hecho">
+                                                    <Setter Property="TextColor" Value="White" />
+                                                </DataTrigger>
+                                                <DataTrigger TargetType="Label" Binding="{Binding Estado}" Value="Actual">
+                                                    <Setter Property="TextColor" Value="White" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                    <Label Text="{Binding Titulo}" FontAttributes="Bold" VerticalOptions="Center"
+                                           TextColor="{StaticResource TintaSuave}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding Estado}" Value="Hecho">
+                                                <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Label" Binding="{Binding Estado}" Value="Actual">
+                                                <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </HorizontalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </Border>
+
+                <!-- ═══════════ 3 · ZONA PRINCIPAL: izquierda (*) y derecha (340 fijo) ═══════════ -->
+                <Grid ColumnDefinitions="*,340" ColumnSpacing="24">
+
+                    <!-- ── IZQUIERDA: talleres disponibles ── -->
+                    <Border Style="{StaticResource Tarjeta}" Padding="0" VerticalOptions="Start">
+                        <VerticalStackLayout>
+                            <Grid ColumnDefinitions="*,Auto" Padding="20,16">
+                                <Label Text="{Binding NombreAlumno, StringFormat='Elige los talleres de {0}'}"
+                                       Style="{StaticResource Seccion}" />
+                                <Label Grid.Column="1" Text="{Binding TextoAgregados}"
+                                       Style="{StaticResource Nota}" VerticalOptions="Center" />
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource Linea}" />
+
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Talleres}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid ColumnDefinitions="*,Auto,132" ColumnSpacing="12" Padding="20,12">
+
+                                            <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                                <Label Text="{Binding Nombre}" FontSize="16" FontAttributes="Bold" />
+                                                <Label Text="{Binding Horario}" Style="{StaticResource Nota}" />
+                                            </VerticalStackLayout>
+
+                                            <Border Grid.Column="1" Style="{StaticResource BadgeBorder}">
+                                                <Label Text="{Binding Badge}" Style="{StaticResource BadgeTexto}" />
+                                            </Border>
+
+                                            <!-- BOTÓN DE ACCIÓN con 4 apariencias según "Accion".
+                                                 Por defecto es "Agregar" (verde). Los estados bloqueados usan
+                                                 InputTransparent=True (en vez de IsEnabled=False) para
+                                                 conservar sus colores. -->
+                                            <!-- TODO COMMAND: AlternarTallerCommand
+                                                 Qué hace: si Accion="Disponible" agrega el taller; si "Agregado" lo quita.
+                                                 "Choque" y "Lleno" no deben hacer nada.
+                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                                   Path=BindingContext.AlternarTallerCommand}"
+                                                 CommandParameter="{Binding .}" -->
+                                            <Button Grid.Column="2" Text="Agregar" Style="{StaticResource BotonPrimario}">
+                                                <Button.Triggers>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding Accion}" Value="Agregado">
+                                                        <Setter Property="Text" Value="Agregado" />
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+                                                        <Setter Property="TextColor" Value="{StaticResource VerdeTexto}" />
+                                                        <Setter Property="BorderColor" Value="{StaticResource Primario}" />
+                                                        <Setter Property="BorderWidth" Value="1" />
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding Accion}" Value="Choque">
+                                                        <Setter Property="Text" Value="Se solapa" />
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource RojoFondo}" />
+                                                        <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+                                                        <Setter Property="BorderColor" Value="{StaticResource RojoBarra}" />
+                                                        <Setter Property="BorderWidth" Value="1" />
+                                                        <Setter Property="InputTransparent" Value="True" />
+                                                    </DataTrigger>
+                                                    <DataTrigger TargetType="Button" Binding="{Binding Accion}" Value="Lleno">
+                                                        <Setter Property="Text" Value="Sin cupo" />
+                                                        <Setter Property="BackgroundColor" Value="{StaticResource Deshabilitado}" />
+                                                        <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+                                                        <Setter Property="InputTransparent" Value="True" />
+                                                    </DataTrigger>
+                                                </Button.Triggers>
+                                            </Button>
+
+                                            <BoxView Grid.ColumnSpan="3" HeightRequest="1" Color="{StaticResource Linea}"
+                                                     VerticalOptions="End" Margin="-20,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ── DERECHA: error + resumen ── -->
+                    <VerticalStackLayout Grid.Column="1" Spacing="16" VerticalOptions="Start">
+
+                        <!-- Banner de error: solo visible si HayError = true.
+                             El TEXTO viene de la API (ej. el detalle de un ProblemDetails);
+                             la vista no inventa mensajes. -->
+                        <Border IsVisible="{Binding HayError}" Padding="14,12"
+                                BackgroundColor="{StaticResource RojoFondo}"
+                                Stroke="{StaticResource RojoBarra}" StrokeThickness="1"
+                                StrokeShape="RoundRectangle 14">
+                            <Label Text="{Binding MensajeError}" TextColor="{StaticResource RojoTexto}"
+                                   FontSize="14" FontAttributes="Bold" />
+                        </Border>
+
+                        <Border Style="{StaticResource Tarjeta}" Padding="20,18">
+                            <VerticalStackLayout Spacing="12">
+                                <Label Text="Resumen" Style="{StaticResource Seccion}" />
+
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Resumen}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="*,Auto,44" ColumnSpacing="6" Padding="0,6">
+                                                <VerticalStackLayout>
+                                                    <Label Text="{Binding Nombre}" FontAttributes="Bold" />
+                                                    <Label Text="{Binding Horario}" Style="{StaticResource Nota}" />
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="1" Text="{Binding Precio}" FontAttributes="Bold"
+                                                       VerticalOptions="Center" />
+                                                <!-- TODO COMMAND: QuitarDelResumenCommand
+                                                     Qué hace: quita este taller de la inscripción.
+                                                     Mismo patrón RelativeSource + CommandParameter="{Binding .}". -->
+                                                <Button Grid.Column="2" Text="✕" BackgroundColor="Transparent"
+                                                        TextColor="{StaticResource TintaSuave}"
+                                                        WidthRequest="44" HeightRequest="44" Padding="0" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+
+                                <BoxView HeightRequest="1" Color="{StaticResource Linea}" />
+
+                                <!-- El total llega YA calculado: la vista no suma nada. -->
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Text="{Binding Periodo, StringFormat='Total {0}'}"
+                                           Style="{StaticResource Etiqueta}" VerticalOptions="End" />
+                                    <Label Grid.Column="1" Text="{Binding Total}" FontSize="30" FontAttributes="Bold" />
+                                </Grid>
+
+                                <!-- TODO COMMAND: ContinuarCommand
+                                     Qué hace: pasa al paso 4 (Resumen) / 5 (Pago).
+                                     Sugerencia: CanExecute = false si no hay talleres agregados. -->
+                                <Button Text="Continuar al resumen" Style="{StaticResource BotonPrimario}"
+                                        HeightRequest="48" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+            </VerticalStackLayout>
+        </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>

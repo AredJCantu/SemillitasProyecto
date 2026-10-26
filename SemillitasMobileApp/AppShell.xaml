@@ -4,11 +4,54 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:SemillitasMobileApp"
+    xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
+    xmlns:aViews="clr-namespace:SemillitasMobileApp.Views.AndroidViews"
+    FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False"
     Title="SemillitasMobileApp">
 
+    <!-- WINDOWS: una sección por opción del MenuLateral -->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Disponibilidad"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:MainView}"
+        Route="MainView" />
+
+    <ShellContent
+        Title="Inscribir"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:InscripcionView}"
+        Route="InscripcionView" />
+
+    <ShellContent
+        Title="Cobranza"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:CobranzaView}"
+        Route="CobranzaView" />
+
+    <ShellContent
+        Title="Agenda"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:AgendaView}"
+        Route="AgendaView" />
+
+    <ShellContent
+        Title="Catálogos"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:TalleresView}"
+        Route="TalleresView" />
+
+    <!-- ANDROID: barra de pestañas inferior -->
+    <TabBar IsVisible="{OnPlatform Android=True, Default=False}">
+        <ShellContent
+            Title="Disponibilidad"
+            ContentTemplate="{DataTemplate aViews:MainView}"
+            Route="AndroidMainView" />
+
+        <ShellContent
+            Title="Cobranza"
+            ContentTemplate="{DataTemplate aViews:CobranzaView}"
+            Route="AndroidCobranzaView" />
+    </TabBar>
 
 </Shell>

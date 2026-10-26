@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    ╔══════════════════════════════════════════════════════════════════════╗
+    ║  WINDOWS · MENULATERAL — Barra lateral verde de la app                ║
+    ╚══════════════════════════════════════════════════════════════════════╝
+
+    PARA QUÉ SIRVE:
+      Es el menú que viste en el mockup (Semillitas, Disponibilidad, Inscribir,
+      Cobranza, Agenda, Catálogos, Reportes y el usuario abajo). Se escribe una
+      sola vez y cada vista de Windows la incluye con:
+          <wViews:MenuLateral Activo="Cobranza" />
+      "Activo" resalta la opción de la página actual.
+
+    NOTA: es un ContentView (un pedazo de pantalla), no una página.
+
+    TODO COMMAND: navegación. Cada opción debe llevar a su vista
+      (Shell.Current.GoToAsync o el mecanismo que decida el equipo).
+      Se añade con un TapGestureRecognizer + Command en cada Border de opción.
+
+    PROPIEDADES QUE LEE DEL BindingContext: ninguna (texto fijo).
+      Si el nombre y rol del usuario deben venir de la sesión, enlázalos a
+      NombreUsuario y RolUsuario (hoy van fijos: "Rocío" / "Recepción").
+-->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SemillitasMobileApp.Views.WindowsViews.MenuLateral"
+             x:Name="Menu">
+
+    <ContentView.Resources>
+        <Color x:Key="PrimarioOscuro">#1F3A2E</Color>
+        <Color x:Key="ItemActivo">#2F5A45</Color>
+        <Color x:Key="TextoClaro">#E8EFE9</Color>
+        <Color x:Key="TextoApagado">#9DB5A6</Color>
+
+        <!-- Opción del menú: se ilumina cuando Activo coincide con su nombre -->
+        <Style x:Key="Opcion" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="10" /></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="OpcionTexto" TargetType="Label">
+            <Setter Property="TextColor" Value="{StaticResource TextoClaro}" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="VerticalOptions" Value="Center" />
+        </Style>
+    </ContentView.Resources>
+
+    <Grid WidthRequest="232" BackgroundColor="{StaticResource PrimarioOscuro}"
+          RowDefinitions="Auto,*,Auto" Padding="16,24" RowSpacing="28">
+
+        <!-- Logo -->
+        <VerticalStackLayout Spacing="2">
+            <Label Text="Semillitas" FontSize="22" FontAttributes="Bold" TextColor="White" />
+            <Label Text="Gestión de talleres" FontSize="13" TextColor="{StaticResource TextoApagado}" />
+        </VerticalStackLayout>
+
+        <!-- Opciones -->
+        <VerticalStackLayout Grid.Row="1" Spacing="4">
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Disponibilidad">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Label Text="Disponibilidad" Style="{StaticResource OpcionTexto}" />
+            </Border>
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Inscribir">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Label Text="Inscribir" Style="{StaticResource OpcionTexto}" />
+            </Border>
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Cobranza">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Label Text="Cobranza" Style="{StaticResource OpcionTexto}" />
+            </Border>
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Agenda">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Label Text="Agenda" Style="{StaticResource OpcionTexto}" />
+            </Border>
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Catalogos">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Label Text="Catálogos" Style="{StaticResource OpcionTexto}" />
+            </Border>
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Reportes">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Label Text="Reportes" Style="{StaticResource OpcionTexto}" />
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- Usuario -->
+        <HorizontalStackLayout Grid.Row="2" Spacing="12">
+            <Border WidthRequest="40" HeightRequest="40" StrokeThickness="0" BackgroundColor="#2A6F4F"
+                    StrokeShape="RoundRectangle 20">
+                <Label Text="R" FontAttributes="Bold" TextColor="White"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+            <VerticalStackLayout VerticalOptions="Center">
+                <Label Text="Rocío" FontAttributes="Bold" TextColor="White" />
+                <Label Text="Recepción" FontSize="13" TextColor="{StaticResource TextoApagado}" />
+            </VerticalStackLayout>
+        </HorizontalStackLayout>
+    </Grid>
+</ContentView>
