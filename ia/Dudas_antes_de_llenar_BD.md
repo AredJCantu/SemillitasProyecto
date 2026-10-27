@@ -1,4 +1,4 @@
-**我说：**
+**I said：**
 
 Eres un experto en bases de datos, analiza el script de bases de datos y necesito que la llenes de información realista y coherente siguiendo las instrucciones siguientes.
 ======= INSTRUCCIONES =======
@@ -67,7 +67,7 @@ NO ASUMAS NADA, si tienes dudas, preguntame antes de hacer cualquier movimiento
 
 ---
 
-**DeepSeek说：**
+**DeepSeek said：**
 
 Antes de proceder a generar los datos, necesito aclarar varios puntos clave del script y las instrucciones, ya que hay ambigüedades que, si las asumo, podrían llevar a una base de datos incoherente. Siguiendo tu indicación de **no asumir nada**, planteo las siguientes dudas:
 
@@ -143,7 +143,7 @@ Una vez que respondas estas preguntas, podré generar los `INSERT` de manera coh
 
 ---
 
-**我说：**
+**I said：**
 
 1- El año se representa en 2021-2022...
 2- Genera del 2025 al 2027
@@ -168,7 +168,7 @@ Una vez que respondas estas preguntas, podré generar los `INSERT` de manera coh
 
 ---
 
-**DeepSeek说：**
+**DeepSeek said：**
 
 Con base en tu confirmación y la investigación de costos reales en Coahuila, he preparado el script completo. Los costos se fundamentan en talleres municipales y académicos de la región: mensualidades de **$350 a $500 MXN** en arte y deportes, y de **$500 a $700 MXN** en tecnología, que es el rango real para robótica y programación infantil.
 
