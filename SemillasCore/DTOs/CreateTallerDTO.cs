@@ -9,30 +9,30 @@ namespace SemillasCore.DTOs
 {
     public class CreateTallerDTO
     {
-        [Required(ErrorMessage = "El nombre del taller no debe ir vació.")]
+        //[Required(ErrorMessage = "El nombre del taller no debe ir vació.")]
         public string Nombre { get; set; } = null!;
-        [Required(ErrorMessage = "El taller debe tener un costo fijo.")]
+        //[Required(ErrorMessage = "El taller debe tener un costo fijo.")]
         
         public decimal Costo { get; set; }
-        [Required(ErrorMessage = "El taller debe tener una hora de inicio.")]
-        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        //[Required(ErrorMessage = "El taller debe tener una hora de inicio.")]
+        //[RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
         public int HoraInicio { get; set; }
-        [Required(ErrorMessage = "El taller debe tener una hora final.")]
-        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        //[Required(ErrorMessage = "El taller debe tener una hora final.")]
+        //[RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
         public int HoraFin { get; set; }
-        [Required(ErrorMessage = "El taller debe tener un cupo de alumnos.")]
+        //[Required(ErrorMessage = "El taller debe tener un cupo de alumnos.")]
         public int Cupo { get; set; }
-        [Required(ErrorMessage = "Se necesita un docente para el taller.")]
+        //[Required(ErrorMessage = "Se necesita un docente para el taller.")]
         public string NombreInstructor { get; set; } = null!;
-        [Required(ErrorMessage = "Seleccione una categoria para el taller")]
+        //[Required(ErrorMessage = "Seleccione una categoria para el taller")]
         public string Categoria { get; set; } = null!;
-        [Required(ErrorMessage = "Seleccione a que periodo pertenece ese taller.")]
+        //[Required(ErrorMessage = "Seleccione a que periodo pertenece ese taller.")]
         public int IdPeriodo { get; set; }
-        [Required(ErrorMessage = "El taller debe tener una hora inicial sabatina.")]
-        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        //[Required(ErrorMessage = "El taller debe tener una hora inicial sabatina.")]
+        //[RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
         public int HoraInicioSabado { get; set; }
-        [Required(ErrorMessage = "El taller debe tener una hora final sabatina.")]
-        [RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
+        //[Required(ErrorMessage = "El taller debe tener una hora final sabatina.")]
+        //[RegularExpression(@"^(0[0-9])|(1[0-9])|(2[0-4])$")]
         public int HoraFinSabado { get; set; }
     }
     public class DatosTallerDTO {

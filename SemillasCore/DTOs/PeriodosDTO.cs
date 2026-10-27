@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 namespace SemillasCore.DTOs
 {
     public class CreatePeriodoDTO {
-        [Required(ErrorMessage = "Favor de ingresar un valor.")]
-        [RegularExpression(@"^([0-9])|(1[0-2])$",ErrorMessage = "Mes ingresado inválido.")]
+        //[Required(ErrorMessage = "Favor de ingresar un valor.")]
+        //[RegularExpression(@"^([0-9])|(1[0-2])$",ErrorMessage = "Mes ingresado inválido.")]
         public int MesInicio { get; set; }
-        [Required(ErrorMessage = "Favor de ingresar un valor.")]
-        [RegularExpression(@"^([0-9])|(1[0-2])$", ErrorMessage = "Mes ingresado inválido.")]
+        //[Required(ErrorMessage = "Favor de ingresar un valor.")]
+        //[RegularExpression(@"^([0-9])|(1[0-2])$", ErrorMessage = "Mes ingresado inválido.")]
         public int MesFin { get; set; }
-        [Required(ErrorMessage = "Favor de ingresar un valor.")]
-        [RegularExpression(@"^(200[0-9])|(201[0-9])|(202[0-9])$", ErrorMessage = "Año ingresado inválido.")]
+        //[Required(ErrorMessage = "Favor de ingresar un valor.")]
+        //[RegularExpression(@"^(200[0-9])|(201[0-9])|(202[0-9])$", ErrorMessage = "Año ingresado inválido.")]
         public int Año { get; set; }
     }
     public class PeriodoDTO : CreatePeriodoDTO {
