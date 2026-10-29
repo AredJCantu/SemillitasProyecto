@@ -1,38 +1,48 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using SemillasCore.DTOs;
+using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
-using SemillitasMobileApp.Models;
 using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
-public partial class AgendaViewModel : BaseViewModel
+// CAMBIO: sin toolkit; el detalle de cada taller es inscritos/máximo (sin instructor, que queda fuera por ahora)
+public class AgendaViewModel : ViewModelBase
 {
     private readonly TalleresService _talleres = new();
-    private readonly InscripcionesService _inscripciones = new();
     private readonly PeriodosService _periodos = new();
 
-    private List<Taller> _todos = new();
-    private List<Inscripcion> _inscritos = new();
+    private List<TallerDTO> _todos = new();
 
-    [ObservableProperty] private List<Periodo> periodos = new();
-    [ObservableProperty] private Periodo? periodoSeleccionado;
-    [ObservableProperty] private List<FranjaFila> franjas = new();
+    public AgendaViewModel()
+    {
+        CargarCommand = new AsyncRelayCommand(() => Ejecutar(Cargar));
+    }
 
-    partial void OnPeriodoSeleccionadoChanged(Periodo? value) => Aplicar();
+    public AsyncRelayCommand CargarCommand { get; }
 
-    [RelayCommand]
-    private Task Cargar() => Ejecutar(async () =>
+    private List<PeriodoDTO> _periodosLista = new();
+    public List<PeriodoDTO> Periodos { get => _periodosLista; set => SetField(ref _periodosLista, value); }
+
+    private PeriodoDTO? _periodoSeleccionado;
+    public PeriodoDTO? PeriodoSeleccionado
+    {
+        get => _periodoSeleccionado;
+        set { if (SetField(ref _periodoSeleccionado, value)) Aplicar(); }
+    }
+
+    private List<FranjaFila> _franjas = new();
+    public List<FranjaFila> Franjas { get => _franjas; set => SetField(ref _franjas, value); }
+
+    private async Task Cargar()
     {
         _todos = await _talleres.ObtenerAsync();
-        _inscritos = await _inscripciones.ObtenerAsync();
         var lista = await _periodos.ObtenerAsync();
 
         var idActual = PeriodoSeleccionado?.Id;
         Periodos = lista;
         PeriodoSeleccionado = lista.FirstOrDefault(p => p.Id == idActual) ?? lista.OrderBy(p => p.Id).LastOrDefault();
         Aplicar();
-    });
+    }
 
     // Talleres con la misma hora de inicio y fin quedan en la misma franja
     private void Aplicar()
@@ -47,7 +57,7 @@ public partial class AgendaViewModel : BaseViewModel
                 Talleres = g.Select(t => new EventoFila
                 {
                     Nombre = t.Nombre,
-                    Detalle = $"{t.NombreInstructor} · {_inscritos.Count(i => i.IdTaller == t.Id)}/{t.Cupo}",
+                    Detalle = $"{t.CantidadAlumnos}/{Formato.Maximo(t)} inscritos",
                     Categoria = Formato.CategoriaClave(t.Categoria)
                 }).ToList()
             }).ToList();

@@ -1,44 +1,88 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using SemillasCore.DTOs;
+using SemillasCore.Validators;
+using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
-using SemillitasMobileApp.Models;
 using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
 // Es una sección raíz del Shell. Desde Disponibilidad llega opcionalmente { "Taller": taller }.
-public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
+// CAMBIOS: sin toolkit; sin ApellidoTutor; el cupo lleno sale de TallerDTO.Cupo (lugares que quedan);
+// el choque de horario revisa entre semana y sábado; los datos del alumno se validan con
+// CreateAlumnoValidator de SemillasCore.
+public class InscripcionViewModel : ViewModelBase, IQueryAttributable
 {
     private readonly TalleresService _talleres = new();
     private readonly AlumnosService _alumnos = new();
     private readonly InscripcionesService _inscripciones = new();
     private readonly PeriodosService _periodos = new();
 
-    private List<Taller> _todosTalleres = new();
-    private List<Inscripcion> _inscritos = new();
-    private List<Alumno> _todosAlumnos = new();
-    private readonly List<Taller> _agregados = new();   // talleres elegidos en esta inscripción
-    private Alumno? _alumnoExistente;                   // si se eligió con el buscador
-    private Periodo? _periodo;
-    private Taller? _tallerInicial;                     // el que se pulsó en Disponibilidad
+    private List<TallerDTO> _todosTalleres = new();
+    private List<AlumnoDTO> _todosAlumnos = new();
+    private readonly List<TallerDTO> _agregados = new();   // talleres elegidos en esta inscripción
+    private AlumnoDTO? _alumnoExistente;                   // si se eligió con el buscador
+    private PeriodoDTO? _periodoActual;
+    private TallerDTO? _tallerInicial;                     // el que se pulsó en Disponibilidad
 
-    [ObservableProperty] private string subtituloInscripcion = "";
-    [ObservableProperty] private string periodo = "";
-    [ObservableProperty] private string total = "$0";
-    [ObservableProperty] private bool hayError;
-    [ObservableProperty] private string mensajeError = "";
-    [ObservableProperty] private string textoBusquedaAlumno = "";
-    [ObservableProperty] private string nombreAlumno = "";
-    [ObservableProperty] private string apellidoAlumno = "";
-    [ObservableProperty] private string nombreTutor = "";
-    [ObservableProperty] private string apellidoTutor = "";
-    [ObservableProperty] private string telefonoAlumno = "";
-    [ObservableProperty] private List<TallerInscripcionFila> talleres = new();
-    [ObservableProperty] private List<ResumenFila> resumen = new();
+    public InscripcionViewModel()
+    {
+        CargarCommand = new AsyncRelayCommand(() => Ejecutar(Cargar));
+        AlternarTallerCommand = new RelayCommand<TallerInscripcionFila>(AlternarTaller);
+        QuitarDelResumenCommand = new RelayCommand<ResumenFila>(QuitarDelResumen);
+        CancelarCommand = new AsyncRelayCommand(Cancelar);
+        ConfirmarInscripcionCommand = new AsyncRelayCommand(ConfirmarInscripcion);
+    }
+
+    public AsyncRelayCommand CargarCommand { get; }
+    public RelayCommand<TallerInscripcionFila> AlternarTallerCommand { get; }
+    public RelayCommand<ResumenFila> QuitarDelResumenCommand { get; }
+    public AsyncRelayCommand CancelarCommand { get; }
+    public AsyncRelayCommand ConfirmarInscripcionCommand { get; }
+
+    private string _subtituloInscripcion = "";
+    public string SubtituloInscripcion { get => _subtituloInscripcion; set => SetField(ref _subtituloInscripcion, value); }
+
+    private string _periodo = "";
+    public string Periodo { get => _periodo; set => SetField(ref _periodo, value); }
+
+    private string _total = "$0";
+    public string Total { get => _total; set => SetField(ref _total, value); }
+
+    private bool _hayError;
+    public bool HayError { get => _hayError; set => SetField(ref _hayError, value); }
+
+    private string _mensajeError = "";
+    public string MensajeError { get => _mensajeError; set => SetField(ref _mensajeError, value); }
+
+    // Buscador: si hay una sola coincidencia se rellenan los datos del alumno
+    private string _textoBusquedaAlumno = "";
+    public string TextoBusquedaAlumno
+    {
+        get => _textoBusquedaAlumno;
+        set { if (SetField(ref _textoBusquedaAlumno, value)) BuscarAlumno(value); }
+    }
+
+    private string _nombreAlumno = "";
+    public string NombreAlumno { get => _nombreAlumno; set => SetField(ref _nombreAlumno, value); }
+
+    private string _apellidoAlumno = "";
+    public string ApellidoAlumno { get => _apellidoAlumno; set => SetField(ref _apellidoAlumno, value); }
+
+    private string _nombreTutor = "";
+    public string NombreTutor { get => _nombreTutor; set => SetField(ref _nombreTutor, value); }
+
+    private string _telefonoAlumno = "";
+    public string TelefonoAlumno { get => _telefonoAlumno; set => SetField(ref _telefonoAlumno, value); }
+
+    private List<TallerInscripcionFila> _talleresLista = new();
+    public List<TallerInscripcionFila> Talleres { get => _talleresLista; set => SetField(ref _talleresLista, value); }
+
+    private List<ResumenFila> _resumen = new();
+    public List<ResumenFila> Resumen { get => _resumen; set => SetField(ref _resumen, value); }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        if (query.TryGetValue("Taller", out var valor) && valor is Taller t)
+        if (query.TryGetValue("Taller", out var valor) && valor is TallerDTO t)
         {
             _tallerInicial = t;
             // Si los datos ya estaban cargados no se espera a Appearing
@@ -46,22 +90,20 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         }
     }
 
-    [RelayCommand]
-    private Task Cargar() => Ejecutar(async () =>
+    private async Task Cargar()
     {
         _todosTalleres = await _talleres.ObtenerAsync();
-        _inscritos = await _inscripciones.ObtenerAsync();
         _todosAlumnos = await _alumnos.ObtenerAsync();
         var periodos = await _periodos.ObtenerAsync();
 
         // Período: el del taller elegido, o el que ya había, o el más reciente
-        var idPeriodo = _tallerInicial?.IdPeriodo ?? _periodo?.Id;
-        _periodo = periodos.FirstOrDefault(p => p.Id == idPeriodo) ?? periodos.OrderBy(p => p.Id).LastOrDefault();
-        Periodo = _periodo?.ToString() ?? "";
+        var idPeriodo = _tallerInicial?.IdPeriodo ?? _periodoActual?.Id;
+        _periodoActual = periodos.FirstOrDefault(p => p.Id == idPeriodo) ?? periodos.OrderBy(p => p.Id).LastOrDefault();
+        Periodo = _periodoActual?.ToString() ?? "";
         SubtituloInscripcion = $"Período {Periodo}";
 
         AplicarTallerInicial();
-    });
+    }
 
     private void AplicarTallerInicial()
     {
@@ -71,19 +113,24 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         Reconstruir();
     }
 
-    private bool EstaLleno(Taller t) => _inscritos.Count(i => i.IdTaller == t.Id) >= t.Cupo;
+    // Cupo = lugares que quedan, así que 0 significa lleno
+    private static bool EstaLleno(TallerDTO t) => t.Cupo <= 0;
 
-    private static bool Chocan(Taller a, Taller b) => a.HoraInicio < b.HoraFin && b.HoraInicio < a.HoraFin;
+    private static bool Traslapa(int inicioA, int finA, int inicioB, int finB) => inicioA < finB && inicioB < finA;
+
+    // CAMBIO: choque si se traslapan entre semana o el sábado
+    private static bool Chocan(TallerDTO a, TallerDTO b) =>
+        Traslapa(a.HoraInicio, a.HoraFin, b.HoraInicio, b.HoraFin)
+        || Traslapa(a.HoraInicioSabado, a.HoraFinSabado, b.HoraInicioSabado, b.HoraFinSabado);
 
     // Recalcula la acción de cada taller (Disponible/Agregado/Choque/Lleno), el resumen y el total
     private void Reconstruir()
     {
         Talleres = _todosTalleres
-            .Where(t => t.IdPeriodo == _periodo?.Id)
+            .Where(t => t.IdPeriodo == _periodoActual?.Id)
             .Select(t =>
             {
-                var inscritos = _inscritos.Count(i => i.IdTaller == t.Id);
-                var (badge, tono) = Formato.Lugares(t.Cupo, inscritos);
+                var (badge, tono) = Formato.Lugares(t.Cupo, Formato.Maximo(t));
 
                 var accion = _agregados.Any(a => a.Id == t.Id) ? "Agregado"
                            : EstaLleno(t) ? "Lleno"
@@ -94,7 +141,7 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
                 {
                     Taller = t,
                     Nombre = t.Nombre,
-                    Horario = Formato.Rango(t),
+                    Horario = Formato.Horario(t),
                     Costo = Formato.Dinero(t.Costo),
                     Badge = badge,
                     Tono = tono,
@@ -106,24 +153,23 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         {
             Taller = t,
             Nombre = t.Nombre,
-            Horario = Formato.Rango(t),
+            Horario = Formato.Horario(t),
             Precio = Formato.Dinero(t.Costo)
         }).ToList();
 
         Total = Formato.Dinero(_agregados.Sum(t => t.Costo));
     }
 
-    // Buscador: si hay una sola coincidencia se rellenan los datos del alumno
-    partial void OnTextoBusquedaAlumnoChanged(string value)
+    private void BuscarAlumno(string texto)
     {
-        if (string.IsNullOrWhiteSpace(value))
+        if (string.IsNullOrWhiteSpace(texto))
         {
             _alumnoExistente = null;
             return;
         }
 
         var coincidencias = _todosAlumnos
-            .Where(a => Formato.Contiene(Formato.NombreCompleto(a), value.Trim()))
+            .Where(a => Formato.Contiene(Formato.NombreCompleto(a), texto.Trim()))
             .ToList();
 
         if (coincidencias.Count != 1) return;
@@ -133,11 +179,9 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         NombreAlumno = elegido.Nombre;
         ApellidoAlumno = elegido.Apellido;
         NombreTutor = elegido.NombreTutor;
-        ApellidoTutor = elegido.ApellidoTutor;
         TelefonoAlumno = elegido.Telefono;
     }
 
-    [RelayCommand]
     private void AlternarTaller(TallerInscripcionFila fila)
     {
         if (fila.Accion == "Disponible") _agregados.Add(fila.Taller);
@@ -148,14 +192,12 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         Reconstruir();
     }
 
-    [RelayCommand]
     private void QuitarDelResumen(ResumenFila fila)
     {
         _agregados.RemoveAll(t => t.Id == fila.Taller.Id);
         Reconstruir();
     }
 
-    [RelayCommand]
     private async Task Cancelar()
     {
         if (_agregados.Count > 0 &&
@@ -166,21 +208,23 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         await Shell.Current.GoToAsync($"//{Rutas.Disponibilidad}");
     }
 
-    [RelayCommand]
     private async Task ConfirmarInscripcion()
     {
         HayError = false;
 
-        if (string.IsNullOrWhiteSpace(NombreAlumno) || string.IsNullOrWhiteSpace(ApellidoAlumno)
-            || string.IsNullOrWhiteSpace(NombreTutor) || string.IsNullOrWhiteSpace(ApellidoTutor)
-            || string.IsNullOrWhiteSpace(TelefonoAlumno))
+        // Los datos del alumno se validan con el mismo validator que usa el API
+        var datos = new CreateAlumnoDTO
         {
-            MostrarError("Completa los datos del alumno y del tutor.");
-            return;
-        }
-        if (_agregados.Count == 0)
+            Nombre = NombreAlumno.Trim(),
+            Apellido = ApellidoAlumno.Trim(),
+            NombreTutor = NombreTutor.Trim(),
+            Telefono = TelefonoAlumno.Trim()
+        };
+        var errores = new CreateAlumnoValidator().IsValid(datos).Errores;
+        if (_agregados.Count == 0) errores.Add("Agrega al menos un taller.");
+        if (errores.Count > 0)
         {
-            MostrarError("Agrega al menos un taller.");
+            MostrarError(string.Join("\n", errores));
             return;
         }
 
@@ -189,22 +233,16 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
             try
             {
                 // Alumno nuevo: se crea primero para tener su Id. Alumno existente: se usa tal cual.
-                var alumno = _alumnoExistente ?? await _alumnos.CrearAsync(new Alumno
-                {
-                    Nombre = NombreAlumno.Trim(),
-                    Apellido = ApellidoAlumno.Trim(),
-                    NombreTutor = NombreTutor.Trim(),
-                    ApellidoTutor = ApellidoTutor.Trim(),
-                    Telefono = TelefonoAlumno.Trim()
-                }) ?? throw new ApiException("El servidor no devolvió el alumno creado.");
+                var alumno = _alumnoExistente ?? await _alumnos.CrearAsync(datos)
+                    ?? throw new ApiException(new List<string> { "El servidor no devolvió el alumno creado." });
 
                 // Una inscripción por taller; Debe = true hasta que se marque el pago en Cobranza
                 foreach (var taller in _agregados.ToList())
-                    await _inscripciones.CrearAsync(new Inscripcion { IdAlumno = alumno.Id, IdTaller = taller.Id, Debe = true });
+                    await _inscripciones.CrearAsync(new CreateInscripcionesDTO { IdAlumno = alumno.Id, IdTaller = taller.Id, Debe = true });
             }
             catch (ApiException ex)
             {
-                MostrarError(ex.Message);   // choque de horario, cupo lleno, datos inválidos...
+                MostrarError(string.Join("\n", ex.Errores));   // choque de horario, cupo lleno, datos inválidos...
                 return;
             }
 
@@ -225,7 +263,7 @@ public partial class InscripcionViewModel : BaseViewModel, IQueryAttributable
         _agregados.Clear();
         _alumnoExistente = null;
         TextoBusquedaAlumno = "";
-        NombreAlumno = ApellidoAlumno = NombreTutor = ApellidoTutor = TelefonoAlumno = "";
+        NombreAlumno = ApellidoAlumno = NombreTutor = TelefonoAlumno = "";
         HayError = false;
         Reconstruir();
     }

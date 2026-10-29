@@ -1,7 +1,10 @@
+using SemillasCore.DTOs;
+
 namespace SemillitasMobileApp.Viewmodels;
 
 // Una "fila" es el modelo ya preparado para mostrarse: texto formateado, colores (Tono), etc.
 // Así la vista solo enlaza propiedades y no calcula nada.
+// CAMBIO: las filas guardan el DTO original (SemillasCore) en lugar de las clases de Models.
 
 public class Chip
 {
@@ -10,7 +13,7 @@ public class Chip
 
 public class TallerFila   // Disponibilidad
 {
-    public Taller Taller { get; set; } = new();
+    public TallerDTO Taller { get; set; } = new();
     public string Nombre { get; set; } = "";
     public string Meta { get; set; } = "";
     public string Horario { get; set; } = "";
@@ -21,12 +24,10 @@ public class TallerFila   // Disponibilidad
     public bool TieneCupo { get; set; }
 }
 
-public class TallerAdminFila   // Lista de talleres
+public class TallerAdminFila   // Lista de talleres (sin instructor, por ahora)
 {
-    public Taller Taller { get; set; } = new();
+    public TallerDTO Taller { get; set; } = new();
     public string Nombre { get; set; } = "";
-    public string Categoria { get; set; } = "";
-    public string Instructor { get; set; } = "";
     public string Horario { get; set; } = "";
     public string Cupo { get; set; } = "";
     public string Costo { get; set; } = "";
@@ -34,7 +35,7 @@ public class TallerAdminFila   // Lista de talleres
 
 public class TallerInscripcionFila   // Pantalla de inscripción
 {
-    public Taller Taller { get; set; } = new();
+    public TallerDTO Taller { get; set; } = new();
     public string Nombre { get; set; } = "";
     public string Horario { get; set; } = "";
     public string Costo { get; set; } = "";
@@ -45,7 +46,7 @@ public class TallerInscripcionFila   // Pantalla de inscripción
 
 public class ResumenFila
 {
-    public Taller Taller { get; set; } = new();
+    public TallerDTO Taller { get; set; } = new();
     public string Nombre { get; set; } = "";
     public string Horario { get; set; } = "";
     public string Precio { get; set; } = "";
@@ -53,7 +54,7 @@ public class ResumenFila
 
 public class CobroFila
 {
-    public Inscripcion Inscripcion { get; set; } = new();
+    public InscripcionesDTO Inscripcion { get; set; } = new();
     public string Tutor { get; set; } = "";
     public string Alumno { get; set; } = "";
     public string Taller { get; set; } = "";
@@ -65,7 +66,7 @@ public class CobroFila
 
 public class AlumnoFila
 {
-    public Alumno Alumno { get; set; } = new();
+    public AlumnoDTO Alumno { get; set; } = new();
     public string NombreCompleto { get; set; } = "";
     public string Tutor { get; set; } = "";
     public string Telefono { get; set; } = "";
@@ -76,7 +77,7 @@ public class AlumnoFila
 
 public class InscripcionAlumnoFila   // Detalle de alumno
 {
-    public Inscripcion Inscripcion { get; set; } = new();
+    public InscripcionesDTO Inscripcion { get; set; } = new();
     public string Taller { get; set; } = "";
     public string Periodo { get; set; } = "";
     public string Costo { get; set; } = "";
@@ -109,8 +110,9 @@ public class FranjaFila
 
 public class PeriodoFila
 {
-    public Periodo Periodo { get; set; } = new();
+    public PeriodoDTO Periodo { get; set; } = new();
     public string MesInicio { get; set; } = "";
     public string MesFin { get; set; } = "";
+    public string Anio { get; set; } = "";
     public int CantidadTalleres { get; set; }
 }

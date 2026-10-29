@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    Lista de períodos (MesInicio – MesFin).
-    Lee: IsBusy, Periodos[MesInicio, MesFin, CantidadTalleres]
-    Commands: NuevoPeriodoCommand, EditarPeriodoCommand (fila)
+    Lista de períodos (MesInicio – MesFin – Año).
+    Lee: IsBusy, Periodos[MesInicio, MesFin, Anio, CantidadTalleres]
+    Commands: NuevoPeriodoCommand, EditarPeriodoCommand (fila), EliminarPeriodoCommand (fila)
+    CAMBIO: columna Año y botón Eliminar
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
@@ -96,11 +97,12 @@
             <!-- Tabla -->
             <Border Grid.Row="1" Style="{StaticResource Tarjeta}" Padding="0">
                 <Grid RowDefinitions="Auto,*">
-                    <Grid ColumnDefinitions="*,*,120,130" ColumnSpacing="16" Padding="20,0"
+                    <Grid ColumnDefinitions="*,*,*,120,220" ColumnSpacing="16" Padding="20,0"
                           HeightRequest="40" BackgroundColor="{StaticResource Fondo}">
                         <Label Text="MES DE INICIO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                         <Label Grid.Column="1" Text="MES DE FIN" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="2" Text="TALLERES" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="2" Text="AÑO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="3" Text="TALLERES" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
 
                     <CollectionView Grid.Row="1" ItemsSource="{Binding Periodos}" SelectionMode="None">
@@ -110,14 +112,18 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="*,*,120,130" ColumnSpacing="16" Padding="20,0" HeightRequest="60">
+                                <Grid ColumnDefinitions="*,*,*,120,220" ColumnSpacing="16" Padding="20,0" HeightRequest="60">
                                     <Label Text="{Binding MesInicio}" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
                                     <Label Grid.Column="1" Text="{Binding MesFin}" FontSize="16" VerticalOptions="Center" />
-                                    <Label Grid.Column="2" Text="{Binding CantidadTalleres}" VerticalOptions="Center" />
-                                    <Button Grid.Column="3" Text="Editar" Style="{StaticResource BotonSecundario}"
-                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarPeriodoCommand}" CommandParameter="{Binding .}"
-                                            VerticalOptions="Center" />
-                                    <BoxView Grid.ColumnSpan="4" HeightRequest="1" Color="{StaticResource Linea}"
+                                    <Label Grid.Column="2" Text="{Binding Anio}" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Text="{Binding CantidadTalleres}" VerticalOptions="Center" />
+                                    <HorizontalStackLayout Grid.Column="4" Spacing="8" VerticalOptions="Center">
+                                        <Button Text="Editar" Style="{StaticResource BotonSecundario}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarPeriodoCommand}" CommandParameter="{Binding .}" />
+                                        <Button Text="Eliminar" Style="{StaticResource BotonPeligro}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EliminarPeriodoCommand}" CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout>
+                                    <BoxView Grid.ColumnSpan="5" HeightRequest="1" Color="{StaticResource Linea}"
                                              VerticalOptions="End" Margin="-20,0" />
                                 </Grid>
                             </DataTemplate>

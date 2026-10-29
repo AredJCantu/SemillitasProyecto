@@ -2,9 +2,10 @@
 <!--
     Inscribir a un alumno en talleres (alumno nuevo o existente, todo en una página).
     Lee: SubtituloInscripcion, Periodo, Total, HayError, MensajeError, TextoBusquedaAlumno,
-         NombreAlumno, ApellidoAlumno, NombreTutor, ApellidoTutor, TelefonoAlumno (TwoWay),
+         NombreAlumno, ApellidoAlumno, NombreTutor, TelefonoAlumno (TwoWay),
          Talleres[Nombre, Horario, Costo, Badge, Tono, Accion], Resumen[Nombre, Horario, Precio]
-    Accion la decide la API: Disponible | Agregado | Choque | Lleno
+    Accion la decide el ViewModel: Disponible | Agregado | Choque | Lleno
+    CAMBIO: sin "Apellidos del tutor" (el DTO solo tiene NombreTutor)
     Commands: CancelarCommand, AlternarTallerCommand (fila), QuitarDelResumenCommand (fila),
               ConfirmarInscripcionCommand
 -->
@@ -163,7 +164,7 @@
                                 <SearchBar Text="{Binding TextoBusquedaAlumno}"
                                            Placeholder="Buscar alumno ya registrado (opcional)" />
 
-                                <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto" RowSpacing="14">
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="16" RowDefinitions="Auto,Auto" RowSpacing="14">
                                     <VerticalStackLayout Spacing="6">
                                         <Label Text="Nombre" Style="{StaticResource Etiqueta}" />
                                         <Entry Text="{Binding NombreAlumno}" />
@@ -177,10 +178,6 @@
                                         <Entry Text="{Binding NombreTutor}" />
                                     </VerticalStackLayout>
                                     <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
-                                        <Label Text="Apellidos del tutor" Style="{StaticResource Etiqueta}" />
-                                        <Entry Text="{Binding ApellidoTutor}" />
-                                    </VerticalStackLayout>
-                                    <VerticalStackLayout Grid.Row="2" Spacing="6">
                                         <Label Text="Teléfono" Style="{StaticResource Etiqueta}" />
                                         <Entry Text="{Binding TelefonoAlumno}" Keyboard="Telephone" />
                                     </VerticalStackLayout>
@@ -255,7 +252,7 @@
                     <!-- Derecha: error y resumen -->
                     <VerticalStackLayout Grid.Column="1" Spacing="16" VerticalOptions="Start">
 
-                        <!-- Banner de error: visible solo si HayError = true. El TEXTO lo manda la API. -->
+                        <!-- Banner de error: visible solo si HayError = true. El texto viene de los validators y de la API. -->
                         <Border IsVisible="{Binding HayError}" Padding="14,12"
                                 BackgroundColor="{StaticResource RojoFondo}"
                                 Stroke="{StaticResource RojoBarra}" StrokeThickness="1"

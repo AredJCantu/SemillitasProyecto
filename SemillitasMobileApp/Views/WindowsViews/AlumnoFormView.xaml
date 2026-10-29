@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    Crear / editar alumno (mismo formulario; Titulo cambia según EsEdicion).
-    Lee (TwoWay): Titulo, NombreAlumno, ApellidoAlumno, NombreTutor, ApellidoTutor, Telefono, IsBusy,
-         TieneErrorNombre/ErrorNombre, TieneErrorTelefono/ErrorTelefono
-    Los mensajes de error vienen de los validators de la API.
+    Crear / editar alumno (mismo formulario; Titulo cambia al editar).
+    Lee (TwoWay): Titulo, NombreAlumno, ApellidoAlumno, NombreTutor, Telefono, IsBusy,
+         HayErrores, Errores (una sola lista de textos)
+    Los errores salen de los validators compartidos (SemillasCore).
+    CAMBIO: sin "Apellidos del tutor" (el DTO solo tiene NombreTutor); una sola lista de errores
     Commands: CancelarCommand, GuardarCommand
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -99,8 +100,6 @@
                         <VerticalStackLayout Spacing="6">
                             <Label Text="Nombre del alumno" Style="{StaticResource Etiqueta}" />
                             <Entry Text="{Binding NombreAlumno}" />
-                            <Label Text="{Binding ErrorNombre}" Style="{StaticResource Error}"
-                                   IsVisible="{Binding TieneErrorNombre}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
                             <Label Text="Apellidos del alumno" Style="{StaticResource Etiqueta}" />
@@ -112,15 +111,19 @@
                             <Entry Text="{Binding NombreTutor}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
-                            <Label Text="Apellidos del tutor" Style="{StaticResource Etiqueta}" />
-                            <Entry Text="{Binding ApellidoTutor}" />
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Grid.Row="2" Spacing="6">
                             <Label Text="Teléfono" Style="{StaticResource Etiqueta}" />
                             <Entry Text="{Binding Telefono}" Keyboard="Telephone" />
-                            <Label Text="{Binding ErrorTelefono}" Style="{StaticResource Error}"
-                                   IsVisible="{Binding TieneErrorTelefono}" />
+                        </VerticalStackLayout>
+
+                        <!-- Lista única de errores -->
+                        <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="4"
+                                             IsVisible="{Binding HayErrores}"
+                                             BindableLayout.ItemsSource="{Binding Errores}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding .}" Style="{StaticResource Error}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>

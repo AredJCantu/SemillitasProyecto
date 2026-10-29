@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
     Crear / editar taller (mismo formulario; EsEdicion muestra Eliminar).
-    Lee (TwoWay): Titulo, EsEdicion, Nombre, Categorias, CategoriaSeleccionada, NombreInstructor,
-         Periodos, PeriodoSeleccionado, CupoMaximo, Costo, Horas, HoraInicio, HoraFin, IsBusy,
-         TieneErrorNombre/ErrorNombre, TieneErrorCosto/ErrorCosto
-    Horas = lista de horas ("3:00 pm"); el DTO guarda enteros (15 = 3 pm).
-    Los mensajes de error vienen de los validators de la API; copia el patrón de Nombre/Costo.
+    Lee (TwoWay): Titulo, EsEdicion, Nombre, NombresCategorias, CategoriaSeleccionada,
+         Periodos, PeriodoSeleccionado, Cupo, Costo,
+         Horas + HoraInicio/HoraFin (entre semana),
+         HorasSabadoInicio + HoraInicioSabado, HorasSabadoFin + HoraFinSabado,
+         IsBusy, HayErrores, Errores (una sola lista de textos)
+    Los textos de las horas son "3 pm"; el DTO guarda enteros (15 = 3 pm).
+    Los errores salen de los validators compartidos (SemillasCore).
+    CAMBIO: sin campo Instructor; se agregaron las horas de sábado; una sola lista de errores
     Commands: CancelarCommand, GuardarCommand, EliminarCommand
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -105,54 +108,65 @@
                 <!-- Formulario (2 columnas) -->
                 <Border Style="{StaticResource Tarjeta}">
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="24" RowSpacing="18"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
 
                         <!-- Nombre (ocupa las 2 columnas) -->
                         <VerticalStackLayout Grid.ColumnSpan="2" Spacing="6">
                             <Label Text="Nombre del taller" Style="{StaticResource Etiqueta}" />
                             <Entry Text="{Binding Nombre}" Placeholder="Ej. Futbol infantil" />
-                            <Label Text="{Binding ErrorNombre}" Style="{StaticResource Error}"
-                                   IsVisible="{Binding TieneErrorNombre}" />
                         </VerticalStackLayout>
 
-                        <!-- Categoría (lista fija: Arte, Deportes, Tecnología) / Instructor (texto libre) -->
+                        <!-- Categoría (lista fija: Arte, Deportes, Tecnología) / Período -->
                         <VerticalStackLayout Grid.Row="1" Spacing="6">
                             <Label Text="Categoría" Style="{StaticResource Etiqueta}" />
-                            <Picker ItemsSource="{Binding Categorias}"
+                            <Picker ItemsSource="{Binding NombresCategorias}"
                                     SelectedItem="{Binding CategoriaSeleccionada}" Title="Elige una categoría" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
-                            <Label Text="Instructor" Style="{StaticResource Etiqueta}" />
-                            <Entry Text="{Binding NombreInstructor}" Placeholder="Ej. Prof. Laura Méndez" />
-                        </VerticalStackLayout>
-
-                        <!-- Período al que pertenece el taller / Cupo -->
-                        <VerticalStackLayout Grid.Row="2" Spacing="6">
                             <Label Text="Período" Style="{StaticResource Etiqueta}" />
                             <Picker ItemsSource="{Binding Periodos}"
                                     SelectedItem="{Binding PeriodoSeleccionado}" Title="Elige un período" />
                         </VerticalStackLayout>
+
+                        <!-- Cupo (lugares disponibles; baja con cada inscripción) / Costo -->
+                        <VerticalStackLayout Grid.Row="2" Spacing="6">
+                            <Label Text="Cupo (lugares disponibles)" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding Cupo}" Keyboard="Numeric" />
+                        </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="6">
-                            <Label Text="Cupo máximo" Style="{StaticResource Etiqueta}" />
-                            <Entry Text="{Binding CupoMaximo}" Keyboard="Numeric" />
+                            <Label Text="Costo ($)" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding Costo}" Keyboard="Numeric" />
                         </VerticalStackLayout>
 
-                        <!-- Horario: la base guarda horas enteras (15 = 3 pm), por eso listas y no TimePicker -->
+                        <!-- Horario entre semana: la base guarda horas enteras (15 = 3 pm), por eso listas y no TimePicker -->
                         <VerticalStackLayout Grid.Row="3" Spacing="6">
-                            <Label Text="Hora de inicio" Style="{StaticResource Etiqueta}" />
+                            <Label Text="Hora de inicio (entre semana)" Style="{StaticResource Etiqueta}" />
                             <Picker ItemsSource="{Binding Horas}" SelectedItem="{Binding HoraInicio}" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="6">
-                            <Label Text="Hora de fin" Style="{StaticResource Etiqueta}" />
+                            <Label Text="Hora de fin (entre semana)" Style="{StaticResource Etiqueta}" />
                             <Picker ItemsSource="{Binding Horas}" SelectedItem="{Binding HoraFin}" />
                         </VerticalStackLayout>
 
-                        <!-- Costo (máximo 999.99 en la base) -->
+                        <!-- Horario del sábado: inicio de 5 am a 12 pm, fin de 6 am a 1 pm (rangos del validator) -->
                         <VerticalStackLayout Grid.Row="4" Spacing="6">
-                            <Label Text="Costo ($)" Style="{StaticResource Etiqueta}" />
-                            <Entry Text="{Binding Costo}" Keyboard="Numeric" />
-                            <Label Text="{Binding ErrorCosto}" Style="{StaticResource Error}"
-                                   IsVisible="{Binding TieneErrorCosto}" />
+                            <Label Text="Hora de inicio (sábado)" Style="{StaticResource Etiqueta}" />
+                            <Picker ItemsSource="{Binding HorasSabadoInicio}" SelectedItem="{Binding HoraInicioSabado}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Row="4" Grid.Column="1" Spacing="6">
+                            <Label Text="Hora de fin (sábado)" Style="{StaticResource Etiqueta}" />
+                            <Picker ItemsSource="{Binding HorasSabadoFin}" SelectedItem="{Binding HoraFinSabado}" />
+                        </VerticalStackLayout>
+
+                        <!-- Lista única de errores -->
+                        <VerticalStackLayout Grid.Row="5" Grid.ColumnSpan="2" Spacing="4"
+                                             IsVisible="{Binding HayErrores}"
+                                             BindableLayout.ItemsSource="{Binding Errores}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding .}" Style="{StaticResource Error}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>

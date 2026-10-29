@@ -1,75 +1,105 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using SemillasCore.DTOs;
+using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
-using SemillitasMobileApp.Models;
 using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
-// Lo usan MainView de Windows y MainView de Android
-public partial class DisponibilidadViewModel : BaseViewModel
+// Lo usan MainView de Windows y MainView de Android.
+// CAMBIO: sin toolkit (propiedades manuales con SetField y comandos propios), sin chips de categoría
+// y sin leer inscripciones: el API ya manda CantidadAlumnos en cada TallerDTO.
+public class DisponibilidadViewModel : ViewModelBase
 {
     private const int TamañoPagina = 8;
 
     private readonly TalleresService _talleres = new();
-    private readonly InscripcionesService _inscripciones = new();
     private readonly PeriodosService _periodos = new();
 
-    private List<Taller> _todos = new();
-    private List<Inscripcion> _inscritos = new();
+    private List<TallerDTO> _todos = new();
     private int _pagina;
+    private int _totalFiltrados;
 
-    [ObservableProperty] private List<Periodo> periodos = new();
-    [ObservableProperty] private Periodo? periodoSeleccionado;
-    [ObservableProperty] private string textoBusqueda = "";
-    [ObservableProperty] private bool soloConCupo;
-    [ObservableProperty] private List<Chip> categorias = new();
-    [ObservableProperty] private Chip? categoriaSeleccionada;
-    [ObservableProperty] private int conteoConCupo;
-    [ObservableProperty] private int conteoPocos;
-    [ObservableProperty] private int conteoLlenos;
-    [ObservableProperty] private List<TallerFila> talleres = new();
-    [ObservableProperty] private string resumenListado = "";
+    public DisponibilidadViewModel()
+    {
+        CargarCommand = new AsyncRelayCommand(() => Ejecutar(Cargar));
+        NuevaInscripcionCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync($"//{Rutas.Inscripcion}"));
+        // La inscripción es una sección raíz del Shell ("//"), se le manda el taller como parámetro
+        InscribirTallerCommand = new AsyncRelayCommand<TallerFila>(fila =>
+            Shell.Current.GoToAsync($"//{Rutas.Inscripcion}", new Dictionary<string, object> { ["Taller"] = fila.Taller }));
+        PaginaAnteriorCommand = new RelayCommand(PaginaAnterior);
+        PaginaSiguienteCommand = new RelayCommand(PaginaSiguiente);
+    }
+
+    public AsyncRelayCommand CargarCommand { get; }
+    public AsyncRelayCommand NuevaInscripcionCommand { get; }
+    public AsyncRelayCommand<TallerFila> InscribirTallerCommand { get; }
+    public RelayCommand PaginaAnteriorCommand { get; }
+    public RelayCommand PaginaSiguienteCommand { get; }
+
+    private List<PeriodoDTO> _periodosLista = new();
+    public List<PeriodoDTO> Periodos { get => _periodosLista; set => SetField(ref _periodosLista, value); }
 
     // Cualquier filtro que cambie vuelve a calcular la lista (primera página)
-    partial void OnPeriodoSeleccionadoChanged(Periodo? value) => Aplicar(reiniciarPagina: true);
-    partial void OnTextoBusquedaChanged(string value) => Aplicar(reiniciarPagina: true);
-    partial void OnSoloConCupoChanged(bool value) => Aplicar(reiniciarPagina: true);
-    partial void OnCategoriaSeleccionadaChanged(Chip? value) => Aplicar(reiniciarPagina: true);
+    private PeriodoDTO? _periodoSeleccionado;
+    public PeriodoDTO? PeriodoSeleccionado
+    {
+        get => _periodoSeleccionado;
+        set { if (SetField(ref _periodoSeleccionado, value)) Aplicar(reiniciarPagina: true); }
+    }
 
-    [RelayCommand]
-    private Task Cargar() => Ejecutar(async () =>
+    private string _textoBusqueda = "";
+    public string TextoBusqueda
+    {
+        get => _textoBusqueda;
+        set { if (SetField(ref _textoBusqueda, value)) Aplicar(reiniciarPagina: true); }
+    }
+
+    private bool _soloConCupo;
+    public bool SoloConCupo
+    {
+        get => _soloConCupo;
+        set { if (SetField(ref _soloConCupo, value)) Aplicar(reiniciarPagina: true); }
+    }
+
+    private int _conteoConCupo;
+    public int ConteoConCupo { get => _conteoConCupo; set => SetField(ref _conteoConCupo, value); }
+
+    private int _conteoPocos;
+    public int ConteoPocos { get => _conteoPocos; set => SetField(ref _conteoPocos, value); }
+
+    private int _conteoLlenos;
+    public int ConteoLlenos { get => _conteoLlenos; set => SetField(ref _conteoLlenos, value); }
+
+    private List<TallerFila> _talleresLista = new();
+    public List<TallerFila> Talleres { get => _talleresLista; set => SetField(ref _talleresLista, value); }
+
+    private string _resumenListado = "";
+    public string ResumenListado { get => _resumenListado; set => SetField(ref _resumenListado, value); }
+
+    private async Task Cargar()
     {
         _todos = await _talleres.ObtenerAsync();
-        _inscritos = await _inscripciones.ObtenerAsync();
         var lista = await _periodos.ObtenerAsync();
-
-        Categorias = new() { new() { Texto = "Todas" }, new() { Texto = "Arte" }, new() { Texto = "Deportes" }, new() { Texto = "Tecnología" } };
-        CategoriaSeleccionada ??= Categorias[0];
 
         // Se conserva el período elegido si sigue existiendo; si no, el más reciente
         var idActual = PeriodoSeleccionado?.Id;
         Periodos = lista;
         PeriodoSeleccionado = lista.FirstOrDefault(p => p.Id == idActual) ?? lista.OrderBy(p => p.Id).LastOrDefault();
         Aplicar();
-    });
+    }
 
     private void Aplicar(bool reiniciarPagina = false)
     {
         if (reiniciarPagina) _pagina = 0;
 
-        var delPeriodo = _todos.Where(t => t.IdPeriodo == PeriodoSeleccionado?.Id).ToList();
-
-        var filas = delPeriodo
-            .Where(t => string.IsNullOrWhiteSpace(TextoBusqueda)
-                        || Formato.Contiene(t.Nombre, TextoBusqueda)
-                        || Formato.Contiene(t.NombreInstructor, TextoBusqueda))
-            .Where(t => CategoriaSeleccionada is null || CategoriaSeleccionada.Texto == "Todas"
-                        || Formato.Categoria(t.Categoria) == CategoriaSeleccionada.Texto)
+        // CAMBIO: la búsqueda es solo por nombre de taller (el instructor queda fuera por ahora)
+        var filas = _todos
+            .Where(t => t.IdPeriodo == PeriodoSeleccionado?.Id)
+            .Where(t => string.IsNullOrWhiteSpace(TextoBusqueda) || Formato.Contiene(t.Nombre, TextoBusqueda))
             .Select(CrearFila)
             .ToList();
 
-        // Los contadores cuentan lo que hay con los filtros de arriba, antes de "solo con cupo"
+        // Los contadores cuentan lo que hay con la búsqueda, antes de "solo con cupo"
         ConteoConCupo = filas.Count(f => f.Tono == "Verde");
         ConteoPocos = filas.Count(f => f.Tono == "Ambar");
         ConteoLlenos = filas.Count(f => f.Tono == "Rojo");
@@ -84,38 +114,26 @@ public partial class DisponibilidadViewModel : BaseViewModel
         _totalFiltrados = filas.Count;
     }
 
-    private int _totalFiltrados;
-
-    private TallerFila CrearFila(Taller t)
+    private static TallerFila CrearFila(TallerDTO t)
     {
-        var inscritos = _inscritos.Count(i => i.IdTaller == t.Id);
-        var libres = Math.Max(t.Cupo - inscritos, 0);
-
-        var (badge, tono) = Formato.Lugares(t.Cupo, inscritos);
+        // Cupo = lugares que quedan; el máximo es lo que quedan más los inscritos
+        var maximo = Formato.Maximo(t);
+        var (badge, tono) = Formato.Lugares(t.Cupo, maximo);
 
         return new TallerFila
         {
             Taller = t,
             Nombre = t.Nombre,
-            Meta = $"{Formato.Categoria(t.Categoria)} · {t.NombreInstructor} · {Formato.Dinero(t.Costo)}",
-            Horario = Formato.Rango(t),
-            Ocupacion = $"{inscritos}/{t.Cupo}",
-            Porcentaje = t.Cupo == 0 ? 1 : Math.Min((double)inscritos / t.Cupo, 1),
+            Meta = $"{Formato.Categoria(t.Categoria)} · {Formato.Dinero(t.Costo)}",
+            Horario = Formato.Horario(t),
+            Ocupacion = $"{t.CantidadAlumnos}/{maximo}",
+            Porcentaje = maximo == 0 ? 1 : Math.Min((double)t.CantidadAlumnos / maximo, 1),
             Badge = badge,
             Tono = tono,
-            TieneCupo = libres > 0
+            TieneCupo = t.Cupo > 0
         };
     }
 
-    [RelayCommand]
-    private Task NuevaInscripcion() => Shell.Current.GoToAsync($"//{Rutas.Inscripcion}");
-
-    // La inscripción es una sección raíz del Shell ("//"), se le manda el taller como parámetro
-    [RelayCommand]
-    private Task InscribirTaller(TallerFila fila) =>
-        Shell.Current.GoToAsync($"//{Rutas.Inscripcion}", new Dictionary<string, object> { ["Taller"] = fila.Taller });
-
-    [RelayCommand]
     private void PaginaAnterior()
     {
         if (_pagina == 0) return;
@@ -123,7 +141,6 @@ public partial class DisponibilidadViewModel : BaseViewModel
         Aplicar();
     }
 
-    [RelayCommand]
     private void PaginaSiguiente()
     {
         if ((_pagina + 1) * TamañoPagina >= _totalFiltrados) return;

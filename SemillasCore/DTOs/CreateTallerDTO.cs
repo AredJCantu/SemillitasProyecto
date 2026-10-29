@@ -39,6 +39,14 @@ namespace SemillasCore.DTOs
         public string Horario { get; set; } = "";
         public int Cupo { get; set; }
         public int CantidadAlumnos { get; set; }
+        public decimal Costo { get; set; }
+        public int IdPeriodo { get; set; }
+        public int HoraInicio { get; set; }
+        public int HoraFin { get; set; }
+        public int HoraInicioSabado { get; set; }
+        public int HoraFinSabado { get; set; }
+        public Categorias Categoria { get; set; }          
+        public string NombreInstructor { get; set; } = ""; 
     }
     public class EditTallerDTO:CreateTallerDTO
     {

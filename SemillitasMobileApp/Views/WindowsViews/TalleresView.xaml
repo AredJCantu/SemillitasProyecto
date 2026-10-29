@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
     Catálogo de talleres.
-    Lee: TextoBusqueda, IsBusy, Talleres[Nombre, Categoria, Instructor, Horario, Cupo, Costo]
-    Horario = "3–5 pm"; Categoria = Arte | Deportes | Tecnología
+    Lee: TextoBusqueda, IsBusy, Talleres[Nombre, Horario, Cupo, Costo]
+    Horario = "3–5 pm"; Cupo = lugares que quedan
+    CAMBIO: se quitaron las columnas de instructor y la categoría bajo el nombre
     Commands: NuevoTallerCommand, VerDetalleTallerCommand (fila), EditarTallerCommand (fila), EliminarTallerCommand (fila)
     Pendiente con la API: no hay columna "activo", así que se muestra Eliminar
     (solo posible si el taller no tiene inscripciones).
@@ -99,20 +100,19 @@
             </Grid>
 
             <!-- Búsqueda -->
-            <SearchBar Grid.Row="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar taller o instructor"
+            <SearchBar Grid.Row="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar taller"
                        HorizontalOptions="Start" WidthRequest="360" />
 
             <!-- Tabla -->
             <Border Grid.Row="2" Style="{StaticResource Tarjeta}" Padding="0">
                 <Grid RowDefinitions="Auto,*">
 
-                    <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,300" ColumnSpacing="16" Padding="20,0"
+                    <Grid ColumnDefinitions="2.6*,2*,90,90,300" ColumnSpacing="16" Padding="20,0"
                           HeightRequest="40" BackgroundColor="{StaticResource Fondo}">
                         <Label Text="TALLER" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="1" Text="INSTRUCTOR" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="2" Text="HORARIO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="3" Text="CUPO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="4" Text="COSTO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="HORARIO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="2" Text="CUPO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="3" Text="COSTO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
 
                     <CollectionView Grid.Row="1" ItemsSource="{Binding Talleres}" SelectionMode="None">
@@ -122,19 +122,15 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,300" ColumnSpacing="16"
+                                <Grid ColumnDefinitions="2.6*,2*,90,90,300" ColumnSpacing="16"
                                       Padding="20,0" HeightRequest="64">
 
-                                    <VerticalStackLayout VerticalOptions="Center" Spacing="2">
-                                        <Label Text="{Binding Nombre}" FontSize="16" FontAttributes="Bold" />
-                                        <Label Text="{Binding Categoria}" Style="{StaticResource Nota}" />
-                                    </VerticalStackLayout>
-                                    <Label Grid.Column="1" Text="{Binding Instructor}" VerticalOptions="Center" />
-                                    <Label Grid.Column="2" Text="{Binding Horario}" Style="{StaticResource Nota}" VerticalOptions="Center" />
-                                    <Label Grid.Column="3" Text="{Binding Cupo}" VerticalOptions="Center" />
-                                    <Label Grid.Column="4" Text="{Binding Costo}" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Text="{Binding Nombre}" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Horario}" Style="{StaticResource Nota}" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding Cupo}" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Text="{Binding Costo}" FontAttributes="Bold" VerticalOptions="Center" />
 
-                                    <HorizontalStackLayout Grid.Column="5" Spacing="8" VerticalOptions="Center">
+                                    <HorizontalStackLayout Grid.Column="4" Spacing="8" VerticalOptions="Center">
                                         <Button Text="Ver" Style="{StaticResource BotonSecundario}"
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VerDetalleTallerCommand}" CommandParameter="{Binding .}" />
                                         <Button Text="Editar" Style="{StaticResource BotonSecundario}"
@@ -144,7 +140,7 @@
                                                 Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EliminarTallerCommand}" CommandParameter="{Binding .}" />
                                     </HorizontalStackLayout>
 
-                                    <BoxView Grid.ColumnSpan="6" HeightRequest="1" Color="{StaticResource Linea}"
+                                    <BoxView Grid.ColumnSpan="5" HeightRequest="1" Color="{StaticResource Linea}"
                                              VerticalOptions="End" Margin="-20,0" />
                                 </Grid>
                             </DataTemplate>

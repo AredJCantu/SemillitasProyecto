@@ -2,7 +2,8 @@
 <!--
     Agenda: talleres agrupados por franja horaria (HoraInicio–HoraFin).
     Lee: Periodos, PeriodoSeleccionado, Franjas[Hora, Talleres[Nombre, Detalle, Categoria]]
-    Detalle = "Instructor · inscritos/cupo"; Categoria = Arte | Deportes | Tecnologia
+    Detalle = "inscritos/máximo inscritos"; Categoria = Arte | Deportes | Tecnologia (solo para el color)
+    CAMBIO: sin instructor en el detalle
     Sin Commands (consulta).
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"

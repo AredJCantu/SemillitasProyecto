@@ -1,39 +1,73 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using SemillasCore.DTOs;
+using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
-using SemillitasMobileApp.Models;
 using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
-// Lo usan CobranzaView de Windows y de Android (Android no usa MarcarPagado)
-public partial class CobranzaViewModel : BaseViewModel
+// Lo usan CobranzaView de Windows y de Android (Android no usa MarcarPagado).
+// CAMBIO: cobranza se calcula en el cliente cruzando inscripciones, talleres y alumnos
+// (el costo sale del taller de cada inscripción).
+public class CobranzaViewModel : ViewModelBase
 {
     private readonly TalleresService _talleres = new();
     private readonly AlumnosService _alumnos = new();
     private readonly InscripcionesService _inscripciones = new();
     private readonly PeriodosService _periodos = new();
 
-    private List<Taller> _todosTalleres = new();
-    private List<Alumno> _todosAlumnos = new();
-    private List<Inscripcion> _todasInscripciones = new();
+    private List<TallerDTO> _todosTalleres = new();
+    private List<AlumnoDTO> _todosAlumnos = new();
+    private List<InscripcionesDTO> _todasInscripciones = new();
 
-    [ObservableProperty] private List<Periodo> periodos = new();
-    [ObservableProperty] private Periodo? periodoSeleccionado;
-    [ObservableProperty] private string cobrado = "$0";
-    [ObservableProperty] private string porCobrar = "$0";
-    [ObservableProperty] private int alumnosConAdeudo;
-    [ObservableProperty] private List<Chip> filtros = new();
-    [ObservableProperty] private Chip? filtroSeleccionado;
-    [ObservableProperty] private string textoBusqueda = "";
-    [ObservableProperty] private List<CobroFila> cobros = new();
+    public CobranzaViewModel()
+    {
+        CargarCommand = new AsyncRelayCommand(() => Ejecutar(Cargar));
+        MarcarPagadoCommand = new AsyncRelayCommand<CobroFila>(MarcarPagado);
+    }
 
-    partial void OnPeriodoSeleccionadoChanged(Periodo? value) => Aplicar();
-    partial void OnFiltroSeleccionadoChanged(Chip? value) => Aplicar();
-    partial void OnTextoBusquedaChanged(string value) => Aplicar();
+    public AsyncRelayCommand CargarCommand { get; }
+    public AsyncRelayCommand<CobroFila> MarcarPagadoCommand { get; }
 
-    [RelayCommand]
-    private Task Cargar() => Ejecutar(async () =>
+    private List<PeriodoDTO> _periodosLista = new();
+    public List<PeriodoDTO> Periodos { get => _periodosLista; set => SetField(ref _periodosLista, value); }
+
+    private PeriodoDTO? _periodoSeleccionado;
+    public PeriodoDTO? PeriodoSeleccionado
+    {
+        get => _periodoSeleccionado;
+        set { if (SetField(ref _periodoSeleccionado, value)) Aplicar(); }
+    }
+
+    private string _cobrado = "$0";
+    public string Cobrado { get => _cobrado; set => SetField(ref _cobrado, value); }
+
+    private string _porCobrar = "$0";
+    public string PorCobrar { get => _porCobrar; set => SetField(ref _porCobrar, value); }
+
+    private int _alumnosConAdeudo;
+    public int AlumnosConAdeudo { get => _alumnosConAdeudo; set => SetField(ref _alumnosConAdeudo, value); }
+
+    private List<Chip> _filtros = new();
+    public List<Chip> Filtros { get => _filtros; set => SetField(ref _filtros, value); }
+
+    private Chip? _filtroSeleccionado;
+    public Chip? FiltroSeleccionado
+    {
+        get => _filtroSeleccionado;
+        set { if (SetField(ref _filtroSeleccionado, value)) Aplicar(); }
+    }
+
+    private string _textoBusqueda = "";
+    public string TextoBusqueda
+    {
+        get => _textoBusqueda;
+        set { if (SetField(ref _textoBusqueda, value)) Aplicar(); }
+    }
+
+    private List<CobroFila> _cobros = new();
+    public List<CobroFila> Cobros { get => _cobros; set => SetField(ref _cobros, value); }
+
+    private async Task Cargar()
     {
         _todosTalleres = await _talleres.ObtenerAsync();
         _todosAlumnos = await _alumnos.ObtenerAsync();
@@ -47,7 +81,7 @@ public partial class CobranzaViewModel : BaseViewModel
         Periodos = lista;
         PeriodoSeleccionado = lista.FirstOrDefault(p => p.Id == idActual) ?? lista.OrderBy(p => p.Id).LastOrDefault();
         Aplicar();
-    });
+    }
 
     private void Aplicar()
     {
@@ -58,36 +92,35 @@ public partial class CobranzaViewModel : BaseViewModel
                      where t.IdPeriodo == PeriodoSeleccionado?.Id
                      select new { i, t, a }).ToList();
 
-        // Los totales no dependen del filtro ni de la búsqueda
-        Cobrado = Formato.Dinero(filas.Where(x => !x.i.Debe).Sum(x => x.t.Costo));
-        PorCobrar = Formato.Dinero(filas.Where(x => x.i.Debe).Sum(x => x.t.Costo));
-        AlumnosConAdeudo = filas.Where(x => x.i.Debe).Select(x => x.a.Id).Distinct().Count();
+        // Debe es bool? en el DTO: solo cuenta como adeudo cuando es true
+        Cobrado = Formato.Dinero(filas.Where(x => x.i.Debe != true).Sum(x => x.t.Costo));
+        PorCobrar = Formato.Dinero(filas.Where(x => x.i.Debe == true).Sum(x => x.t.Costo));
+        AlumnosConAdeudo = filas.Where(x => x.i.Debe == true).Select(x => x.a.Id).Distinct().Count();
 
         Cobros = filas
             .Where(x => FiltroSeleccionado?.Texto switch
             {
-                "Deben" => x.i.Debe,
-                "Al corriente" => !x.i.Debe,
+                "Deben" => x.i.Debe == true,
+                "Al corriente" => x.i.Debe != true,
                 _ => true
             })
             .Where(x => string.IsNullOrWhiteSpace(TextoBusqueda)
                         || Formato.Contiene(Formato.NombreCompleto(x.a), TextoBusqueda)
-                        || Formato.Contiene(Formato.Tutor(x.a), TextoBusqueda)
+                        || Formato.Contiene(x.a.NombreTutor, TextoBusqueda)
                         || Formato.Contiene(x.t.Nombre, TextoBusqueda))
             .Select(x => new CobroFila
             {
                 Inscripcion = x.i,
-                Tutor = Formato.Tutor(x.a),
+                Tutor = x.a.NombreTutor,
                 Alumno = Formato.NombreCompleto(x.a),
                 Taller = x.t.Nombre,
                 Costo = Formato.Dinero(x.t.Costo),
-                Estado = x.i.Debe ? "Debe" : "Al corriente",
-                Tono = x.i.Debe ? "Rojo" : "Verde",
-                PuedeMarcarPago = x.i.Debe
+                Estado = x.i.Debe == true ? "Debe" : "Al corriente",
+                Tono = x.i.Debe == true ? "Rojo" : "Verde",
+                PuedeMarcarPago = x.i.Debe == true
             }).ToList();
     }
 
-    [RelayCommand]
     private async Task MarcarPagado(CobroFila fila)
     {
         if (!await Confirmar("Marcar pagado", $"¿{fila.Alumno} pagó {fila.Taller}?", "Sí, pagó")) return;

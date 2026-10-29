@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
     Detalle de un taller y sus inscritos. Pantalla secundaria (sin menú), se abre desde Talleres.
-    Lee: Nombre, Categoria, Instructor, Horario, Periodo, Costo, Ocupacion ("9/15"),
+    Lee: Nombre, Categoria, Horario, Periodo, Costo, Ocupacion ("9/15" = inscritos/máximo),
          Inscritos[NombreCompleto, Tutor, Telefono, Estado, Tono]
     Commands: VolverCommand, EditarTallerCommand
+    CAMBIO: se quitó el Instructor y se reacomodaron los datos en 3 columnas
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
@@ -111,20 +112,16 @@
 
             <!-- Datos -->
             <Border Style="{StaticResource Tarjeta}">
-                <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16">
+                <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16">
                     <VerticalStackLayout Spacing="2">
                         <Label Text="CATEGORÍA" Style="{StaticResource Nota}" FontAttributes="Bold" />
                         <Label Text="{Binding Categoria}" FontSize="16" />
                     </VerticalStackLayout>
                     <VerticalStackLayout Grid.Column="1" Spacing="2">
-                        <Label Text="INSTRUCTOR" Style="{StaticResource Nota}" FontAttributes="Bold" />
-                        <Label Text="{Binding Instructor}" FontSize="16" />
-                    </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="2" Spacing="2">
                         <Label Text="HORARIO" Style="{StaticResource Nota}" FontAttributes="Bold" />
                         <Label Text="{Binding Horario}" FontSize="16" />
                     </VerticalStackLayout>
-                    <VerticalStackLayout Grid.Column="3" Spacing="2">
+                    <VerticalStackLayout Grid.Column="2" Spacing="2">
                         <Label Text="PERÍODO" Style="{StaticResource Nota}" FontAttributes="Bold" />
                         <Label Text="{Binding Periodo}" FontSize="16" />
                     </VerticalStackLayout>

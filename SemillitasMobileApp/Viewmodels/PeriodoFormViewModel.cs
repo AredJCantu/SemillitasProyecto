@@ -1,67 +1,75 @@
-//using CommunityToolkit.Mvvm.ComponentModel;
-//using CommunityToolkit.Mvvm.Input;
-using SemillitasMobileApp.Models;
+using SemillasCore.DTOs;
+using SemillasCore.Validators;
+using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
-// Nuevo período (sin parámetro) o editar (GoToAsync con { "Periodo": periodo })
-public partial class PeriodoFormViewModel : BaseViewModel/* IQueryAttributable*/
+// Nuevo período (sin parámetro) o editar (GoToAsync con { "Periodo": periodo }).
+// CAMBIO: este archivo estaba comentado; ahora los meses son números 1–12 (como los pide el DTO)
+// y se agrega el año.
+public class PeriodoFormViewModel : ViewModelBase, IQueryAttributable
 {
-    //private readonly PeriodosService _periodos = new();
-    //private Periodo? _periodo;
+    private readonly PeriodosService _periodos = new();
+    private PeriodoDTO? _periodo;
 
-    //[ObservableProperty] private string titulo = "Nuevo período";
-    //[ObservableProperty] private List<string> meses = new()
-    //{
-    //    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    //    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    //};
-    //[ObservableProperty] private string? mesInicio;
-    //[ObservableProperty] private string? mesFin;
-    //[ObservableProperty] private bool tieneErrorPeriodo;
-    //[ObservableProperty] private string errorPeriodo = "";
+    public PeriodoFormViewModel()
+    {
+        CancelarCommand = new AsyncRelayCommand(Regresar);
+        GuardarCommand = new AsyncRelayCommand(() => Ejecutar(Guardar));
+    }
 
-    //public void ApplyQueryAttributes(IDictionary<string, object> query)
-    //{
-    //    if (query.TryGetValue("Periodo", out var valor) && valor is Periodo p)
-    //    {
-    //        _periodo = p;
-    //        Titulo = "Editar período";
-    //        MesInicio = p.MesInicio;
-    //        MesFin = p.MesFin;
-    //    }
-    //}
+    public AsyncRelayCommand CancelarCommand { get; }
+    public AsyncRelayCommand GuardarCommand { get; }
 
-    //[RelayCommand]
-    //private Task Cancelar() => Regresar();
+    private string _titulo = "Nuevo período";
+    public string Titulo { get => _titulo; set => SetField(ref _titulo, value); }
 
-    //[RelayCommand]
-    //private Task Guardar() => Ejecutar(async () =>
-    //{
-    //    TieneErrorPeriodo = false;
+    public List<int> Meses { get; } = Enumerable.Range(1, 12).ToList();
 
-    //    if (MesInicio is null || MesFin is null)
-    //    {
-    //        ErrorPeriodo = "Elige el mes de inicio y el de fin.";
-    //        TieneErrorPeriodo = true;
-    //        return;
-    //    }
+    private int? _mesInicio;
+    public int? MesInicio { get => _mesInicio; set => SetField(ref _mesInicio, value); }
 
-    //    var periodo = new Periodo { Id = _periodo?.Id ?? 0, MesInicio = MesInicio, MesFin = MesFin };
+    private int? _mesFin;
+    public int? MesFin { get => _mesFin; set => SetField(ref _mesFin, value); }
 
-    //    try
-    //    {
-    //        if (_periodo is null) await _periodos.CrearAsync(periodo);
-    //        else await _periodos.ActualizarAsync(periodo);
-    //    }
-    //    catch (ApiException ex) when (ex.Errores.Count > 0)
-    //    {
-    //        ErrorPeriodo = string.Join(" ", ex.Errores.Values.SelectMany(x => x));
-    //        TieneErrorPeriodo = true;
-    //        return;
-    //    }
+    private string _anio = "";
+    public string Anio { get => _anio; set => SetField(ref _anio, value); }
 
-    //    await Regresar();
-    //});
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        if (query.TryGetValue("Periodo", out var valor) && valor is PeriodoDTO p)
+        {
+            _periodo = p;
+            Titulo = "Editar período";
+            MesInicio = p.MesInicio;
+            MesFin = p.MesFin;
+            Anio = p.Año.ToString();
+        }
+    }
+
+    private async Task Guardar()
+    {
+        LimpiarErrores();
+
+        // Si no es número se manda 0 y el validator compartido lo marca como inválido
+        _ = int.TryParse(Anio, out var anio);
+        var inicio = MesInicio ?? 0;
+        var fin = MesFin ?? 0;
+
+        if (_periodo is null)
+        {
+            var nuevo = new CreatePeriodoDTO { MesInicio = inicio, MesFin = fin, Año = anio };
+            if (!EsValido(new CreatePeriodoValidator().IsValid(nuevo))) return;
+            await _periodos.CrearAsync(nuevo);
+        }
+        else
+        {
+            var edicion = new EditPeriodoDTO { Id = _periodo.Id, MesInicio = inicio, MesFin = fin, Año = anio };
+            if (!EsValido(new EditPeriodoValidator().IsValid(edicion))) return;
+            await _periodos.ActualizarAsync(edicion);
+        }
+
+        await Regresar();
+    }
 }

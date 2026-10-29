@@ -6,13 +6,22 @@ namespace SemillitasMobileApp.Services;
 // Único HttpClient de la app. Los servicios lo usan para no repetir código.
 public static class ApiClient
 {
-    // TODO: poner la URL/puerto reales del API. En el emulador de Android "localhost" es el
-    // propio emulador; la PC se ve como 10.0.2.2.
-    //private static readonly string BaseUrl =
-    //    DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5000/" : "http://localhost:5000/";
-    private static readonly string BaseUrl = "https://localhost:44391/";
+    // CAMBIO: URL del API (perfil IIS Express, puerto 44391). El emulador de Android no ve "localhost":
+    // la PC se ve como 10.0.2.2.
+    private static readonly string BaseUrl =
+        DeviceInfo.Platform == DevicePlatform.Android ? "https://10.0.2.2:44391/" : "https://localhost:44391/";
 
-    private static readonly HttpClient Http = new() { BaseAddress = new Uri(BaseUrl) };
+    private static readonly HttpClient Http = CrearCliente();
+
+    private static HttpClient CrearCliente()
+    {
+        var handler = new HttpClientHandler();
+#if DEBUG
+        // Solo en desarrollo: acepta el certificado de prueba (el emulador no lo reconoce). Quitar para producción.
+        handler.ServerCertificateCustomValidationCallback = (mensaje, certificado, cadena, errores) => true;
+#endif
+        return new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) };
+    }
 
     public static async Task<T> GetAsync<T>(string ruta) where T : new()
     {
@@ -40,36 +49,42 @@ public static class ApiClient
         await Verificar(resp);
     }
 
+    // CAMBIO: lee el formato real de error del API
     private static async Task Verificar(HttpResponseMessage resp)
     {
         if (resp.IsSuccessStatusCode) return;
 
         var texto = await resp.Content.ReadAsStringAsync();
-        var errores = new Dictionary<string, string[]>();
-        var mensaje = $"El servidor respondió {(int)resp.StatusCode}.";
+        var errores = new List<string>();
 
-        // Formato estándar de ASP.NET para 400: { "errors": { "Campo": ["mensaje"] } }
         try
         {
             using var doc = JsonDocument.Parse(texto);
-            if (doc.RootElement.ValueKind == JsonValueKind.Object &&
-                doc.RootElement.TryGetProperty("errors", out var e) && e.ValueKind == JsonValueKind.Object)
+            var raiz = doc.RootElement;
+
+            if (raiz.ValueKind == JsonValueKind.Array)
             {
-                foreach (var campo in e.EnumerateObject())
-                    errores[campo.Name] = campo.Value.EnumerateArray().Select(x => x.GetString() ?? "").ToArray();
-                mensaje = string.Join("\n", errores.Values.SelectMany(x => x));
+                // Los controllers hacen BadRequest(result.Errores): una lista de textos
+                errores.AddRange(raiz.EnumerateArray().Select(x => x.GetString() ?? ""));
             }
-            else if (doc.RootElement.ValueKind == JsonValueKind.Object &&
-                     doc.RootElement.TryGetProperty("title", out var t))
+            else if (raiz.ValueKind == JsonValueKind.Object && raiz.TryGetProperty("errors", out var e)
+                     && e.ValueKind == JsonValueKind.Object)
             {
-                mensaje = t.GetString() ?? mensaje;
+                // Errores automáticos de ASP.NET (por ejemplo JSON mal formado): { "errors": { "Campo": ["texto"] } }
+                foreach (var campo in e.EnumerateObject())
+                    errores.AddRange(campo.Value.EnumerateArray().Select(x => x.GetString() ?? ""));
+            }
+            else if (raiz.ValueKind == JsonValueKind.Object && raiz.TryGetProperty("title", out var t))
+            {
+                errores.Add(t.GetString() ?? "");
             }
         }
         catch (JsonException)
         {
-            if (!string.IsNullOrWhiteSpace(texto) && texto.Length < 300) mensaje = texto;
+            if (!string.IsNullOrWhiteSpace(texto) && texto.Length < 300) errores.Add(texto);
         }
 
-        throw new ApiException(mensaje, errores);
+        if (errores.Count == 0) errores.Add($"El servidor respondió {(int)resp.StatusCode}.");
+        throw new ApiException(errores);
     }
 }

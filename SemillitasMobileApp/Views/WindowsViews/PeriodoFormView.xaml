@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    Crear / editar período (la tabla solo guarda mes de inicio y mes de fin, como texto).
-    Lee (TwoWay): Titulo, Meses, MesInicio, MesFin, IsBusy, TieneErrorPeriodo/ErrorPeriodo
+    Crear / editar período (mes de inicio, mes de fin y año).
+    Lee (TwoWay): Titulo, Meses (1 a 12), MesInicio, MesFin, Anio, IsBusy, HayErrores, Errores
+    CAMBIO: los meses son números 1–12 (como pide el DTO), se agrega el año y una sola lista de errores
     Commands: CancelarCommand, GuardarCommand
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -91,16 +92,29 @@
 
                 <!-- Formulario -->
                 <Border Style="{StaticResource Tarjeta}">
-                    <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="24" RowSpacing="18" RowDefinitions="Auto,Auto">
                         <VerticalStackLayout Spacing="6">
-                            <Label Text="Mes de inicio" Style="{StaticResource Etiqueta}" />
+                            <Label Text="Mes de inicio (1-12)" Style="{StaticResource Etiqueta}" />
                             <Picker ItemsSource="{Binding Meses}" SelectedItem="{Binding MesInicio}" Title="Elige un mes" />
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Column="1" Spacing="6">
-                            <Label Text="Mes de fin" Style="{StaticResource Etiqueta}" />
+                            <Label Text="Mes de fin (1-12)" Style="{StaticResource Etiqueta}" />
                             <Picker ItemsSource="{Binding Meses}" SelectedItem="{Binding MesFin}" Title="Elige un mes" />
-                            <Label Text="{Binding ErrorPeriodo}" Style="{StaticResource Error}"
-                                   IsVisible="{Binding TieneErrorPeriodo}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" Spacing="6">
+                            <Label Text="Año" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding Anio}" Keyboard="Numeric" Placeholder="Ej. 2026" />
+                        </VerticalStackLayout>
+
+                        <!-- Lista única de errores -->
+                        <VerticalStackLayout Grid.Row="1" Grid.ColumnSpan="3" Spacing="4"
+                                             IsVisible="{Binding HayErrores}"
+                                             BindableLayout.ItemsSource="{Binding Errores}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Label Text="{Binding .}" Style="{StaticResource Error}" />
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
                     </Grid>
                 </Border>

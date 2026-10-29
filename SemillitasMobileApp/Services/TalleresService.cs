@@ -1,15 +1,15 @@
-using SemillitasMobileApp.Models;
+using SemillasCore.DTOs;
 
 namespace SemillitasMobileApp.Services;
 
-// Habla con TalleresController. Rutas supuestas: confirmar con quien hace el API.
+// CAMBIO: usa los DTOs de SemillasCore directamente (ya no existe la carpeta Models)
 public class TalleresService
 {
-    public Task<List<Taller>> ObtenerAsync() => ApiClient.GetAsync<List<Taller>>("api/talleres");
+    public Task<List<TallerDTO>> ObtenerAsync() => ApiClient.GetAsync<List<TallerDTO>>("api/talleres");
 
-    public Task<Taller?> CrearAsync(Taller t) => ApiClient.PostAsync<Taller>("api/talleres", t);
+    public Task<TallerDTO?> CrearAsync(CreateTallerDTO t) => ApiClient.PostAsync<TallerDTO>("api/talleres", t);
 
-    public Task ActualizarAsync(Taller t) => ApiClient.PutAsync($"api/talleres/{t.Id}", t);
+    public Task ActualizarAsync(EditTallerDTO t) => ApiClient.PutAsync($"api/talleres/{t.Id}", t);
 
     public Task EliminarAsync(int id) => ApiClient.DeleteAsync($"api/talleres/{id}");
 }

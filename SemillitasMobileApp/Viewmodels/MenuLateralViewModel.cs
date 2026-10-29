@@ -1,19 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using SemillitasMobileApp.Commands;
 
 namespace SemillitasMobileApp.Viewmodels
 {
-    public partial class MenuLateralViewModel : ObservableObject
+    // CAMBIO: sin toolkit; el botón del menú manda el nombre de la ruta como CommandParameter
+    public class MenuLateralViewModel : ViewModelBase
     {
-        [RelayCommand]
-        private async Task Navegar(string ruta)
+        public MenuLateralViewModel()
         {
-            await Shell.Current.GoToAsync($"//{ruta}");
+            NavegarCommand = new AsyncRelayCommand<string>(Navegar);
         }
+
+        public AsyncRelayCommand<string> NavegarCommand { get; }
+
+        private Task Navegar(string ruta) => Shell.Current.GoToAsync($"//{ruta}");
     }
 }

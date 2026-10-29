@@ -7,12 +7,14 @@ namespace SemillitasProyecto.Services
 {
     public class InscripcionesServices
     {
-        public InscripcionesServices(Repository<Inscripciones> repository)
+        public InscripcionesServices(Repository<Inscripciones> repository, Repository<Talleres> repoTalleres)
         {
             Repository = repository;
+            RepoTalleres = repoTalleres;
         }
 
         public Repository<Inscripciones> Repository { get; }
+        public Repository<Talleres> RepoTalleres { get; }
 
         public IEnumerable<InscripcionesDTO> GetAll() {
             var data = Repository.GetAll().Select(x=>x.ToDTO());
@@ -26,6 +28,14 @@ namespace SemillitasProyecto.Services
             }
             return null;
         }
+        private void MoverCupo(int idTaller, int cambio)
+        {
+            var taller = RepoTalleres.GetById(idTaller);
+            if (taller == null) return;
+            taller.Cupo += cambio;
+            if (taller.Cupo < 0) taller.Cupo = 0;   // nunca negativo
+            RepoTalleres.Update(taller);
+        }
         public IEnumerable<DatosInscripcionesDTO> GetDatosInscripciones() {
             var data = Repository.GetAll().Select(x => x.ToDatosInscripcionesDTO());
             return data;
@@ -35,6 +45,7 @@ namespace SemillitasProyecto.Services
             if (entity != null)
             {
                 Repository.Insert(entity);
+                MoverCupo(entity.IdTaller, -1);
                 return entity.ToDTO();
             }
             return null;
@@ -43,8 +54,14 @@ namespace SemillitasProyecto.Services
         {
             var entity = Repository.GetById(id);
             if (entity != null) {
+                var tallerAnterior = entity.IdTaller;
                 dto.ApplyTo(entity);
                 Repository.Update(entity);
+                if (tallerAnterior != entity.IdTaller)
+                {
+                    MoverCupo(tallerAnterior, +1);
+                    MoverCupo(entity.IdTaller, -1);
+                }
                 return entity.ToDTO();
             }
             return null;
@@ -53,6 +70,7 @@ namespace SemillitasProyecto.Services
             var data = Repository.GetById(id);
             if (data != null) {
                 Repository.Delete(data);
+                MoverCupo(idTaller, +1);
                 return true;
             }
             return false;

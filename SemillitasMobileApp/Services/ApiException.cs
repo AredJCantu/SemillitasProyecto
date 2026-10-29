@@ -1,12 +1,13 @@
 namespace SemillitasMobileApp.Services;
 
-// Error devuelto por el API. Errores: campo -> mensajes (cuando el API responde 400 con "errors")
+// CAMBIO: el API responde los errores como una lista de textos (BadRequest(result.Errores)),
+// sin nombre de campo. Por eso Errores es una lista simple y no un diccionario.
 public class ApiException : Exception
 {
-    public Dictionary<string, string[]> Errores { get; }
+    public List<string> Errores { get; }
 
-    public ApiException(string mensaje, Dictionary<string, string[]>? errores = null) : base(mensaje)
+    public ApiException(List<string> errores) : base(string.Join("\n", errores))
     {
-        Errores = errores ?? new();
+        Errores = errores;
     }
 }

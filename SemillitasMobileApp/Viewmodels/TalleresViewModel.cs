@@ -1,59 +1,65 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+using SemillasCore.DTOs;
+using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
 using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
-public partial class TalleresViewModel : BaseViewModel
+// CAMBIO: sin toolkit y sin columna de instructor (queda fuera por ahora)
+public class TalleresViewModel : ViewModelBase
 {
     private readonly TalleresService _talleres = new();
-    private List<Models.Taller> _todos = new();
+    private List<TallerDTO> _todos = new();
 
-    [ObservableProperty] private string textoBusqueda = "";
-    [ObservableProperty] private List<TallerAdminFila> talleres = new();
+    public TalleresViewModel()
+    {
+        CargarCommand = new AsyncRelayCommand(() => Ejecutar(Cargar));
+        NuevoTallerCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(Rutas.TallerForm));
+        VerDetalleTallerCommand = new AsyncRelayCommand<TallerAdminFila>(fila =>
+            Shell.Current.GoToAsync(Rutas.TallerDetalle, new Dictionary<string, object> { ["Taller"] = fila.Taller }));
+        EditarTallerCommand = new AsyncRelayCommand<TallerAdminFila>(fila =>
+            Shell.Current.GoToAsync(Rutas.TallerForm, new Dictionary<string, object> { ["Taller"] = fila.Taller }));
+        EliminarTallerCommand = new AsyncRelayCommand<TallerAdminFila>(Eliminar);
+    }
+
+    public AsyncRelayCommand CargarCommand { get; }
+    public AsyncRelayCommand NuevoTallerCommand { get; }
+    public AsyncRelayCommand<TallerAdminFila> VerDetalleTallerCommand { get; }
+    public AsyncRelayCommand<TallerAdminFila> EditarTallerCommand { get; }
+    public AsyncRelayCommand<TallerAdminFila> EliminarTallerCommand { get; }
 
     // Cada vez que se escribe en el buscador se vuelve a filtrar (sin ir al API)
-    partial void OnTextoBusquedaChanged(string value) => Filtrar();
+    private string _textoBusqueda = "";
+    public string TextoBusqueda
+    {
+        get => _textoBusqueda;
+        set { if (SetField(ref _textoBusqueda, value)) Filtrar(); }
+    }
 
-    [RelayCommand]
-    private Task Cargar() => Ejecutar(async () =>
+    private List<TallerAdminFila> _talleresLista = new();
+    public List<TallerAdminFila> Talleres { get => _talleresLista; set => SetField(ref _talleresLista, value); }
+
+    private async Task Cargar()
     {
         _todos = await _talleres.ObtenerAsync();
         Filtrar();
-    });
+    }
 
     private void Filtrar()
     {
         Talleres = _todos
-            .Where(t => string.IsNullOrWhiteSpace(TextoBusqueda)
-                        || Formato.Contiene(t.Nombre, TextoBusqueda)
-                        || Formato.Contiene(t.NombreInstructor, TextoBusqueda))
+            .Where(t => string.IsNullOrWhiteSpace(TextoBusqueda) || Formato.Contiene(t.Nombre, TextoBusqueda))
             .Select(t => new TallerAdminFila
             {
                 Taller = t,
                 Nombre = t.Nombre,
-                Categoria = Formato.Categoria(t.Categoria),
-                Instructor = t.NombreInstructor,
-                Horario = Formato.Rango(t),
+                Horario = Formato.Horario(t),
                 Cupo = t.Cupo.ToString(),
                 Costo = Formato.Dinero(t.Costo)
             }).ToList();
     }
 
-    [RelayCommand]
-    private Task NuevoTaller() => Shell.Current.GoToAsync(Rutas.TallerForm);
-
-    [RelayCommand]
-    private Task VerDetalleTaller(TallerAdminFila fila) =>
-        Shell.Current.GoToAsync(Rutas.TallerDetalle, new Dictionary<string, object> { ["Taller"] = fila.Taller });
-
-    [RelayCommand]
-    private Task EditarTaller(TallerAdminFila fila) =>
-        Shell.Current.GoToAsync(Rutas.TallerForm, new Dictionary<string, object> { ["Taller"] = fila.Taller });
-
-    [RelayCommand]
-    private async Task EliminarTaller(TallerAdminFila fila)
+    private async Task Eliminar(TallerAdminFila fila)
     {
         if (!await Confirmar("Eliminar taller", $"¿Eliminar \"{fila.Nombre}\"?", "Eliminar")) return;
 
