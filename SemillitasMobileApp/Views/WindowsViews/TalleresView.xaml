@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Catálogo de talleres.
+    Lee: TextoBusqueda, IsBusy, Talleres[Nombre, Categoria, Instructor, Horario, Cupo, Costo]
+    Horario = "3–5 pm"; Categoria = Arte | Deportes | Tecnología
+    Commands: NuevoTallerCommand, VerDetalleTallerCommand (fila), EditarTallerCommand (fila), EliminarTallerCommand (fila)
+    Pendiente con la API: no hay columna "activo", así que se muestra Eliminar
+    (solo posible si el taller no tiene inscripciones).
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
+             x:Class="SemillitasMobileApp.Views.WindowsViews.TalleresView"
+             Title="Talleres">
+
+    <ContentPage.BindingContext>
+        <vm:TalleresViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.Resources>
+        <Color x:Key="Fondo">#F7F5EF</Color>
+        <Color x:Key="Blanco">#FFFFFF</Color>
+        <Color x:Key="Tinta">#1F2A24</Color>
+        <Color x:Key="TintaSuave">#5A655E</Color>
+        <Color x:Key="Linea">#E2DED2</Color>
+        <Color x:Key="BordeCampo">#CFCABB</Color>
+        <Color x:Key="Primario">#2A6F4F</Color>
+        <Color x:Key="RojoTexto">#8E2A17</Color>
+
+        <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
+        <Style TargetType="SearchBar">
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="HeightRequest" Value="44" />
+        </Style>
+        <Style x:Key="Titulo" TargetType="Label">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Subtitulo" TargetType="Label">
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+        <Style x:Key="Nota" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource Linea}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="BotonPrimario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Primario}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="44" />
+            <Setter Property="Padding" Value="18,0" />
+        </Style>
+        <Style x:Key="BotonSecundario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="BorderColor" Value="{StaticResource BordeCampo}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="14,0" />
+        </Style>
+        <!-- Botón de peligro -->
+        <Style x:Key="BotonPeligro" TargetType="Button" BasedOn="{StaticResource BotonSecundario}">
+            <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <!-- Menú (232) + contenido -->
+    <Grid ColumnDefinitions="232,*">
+        <wViews:MenuLateral Activo="Talleres" />
+        <Grid Grid.Column="1">
+        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16" Padding="32,24" BackgroundColor="{StaticResource Fondo}">
+
+            <!-- Encabezado -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Talleres" Style="{StaticResource Titulo}" />
+                    <Label Text="Administra el catálogo: crea, edita o elimina talleres."
+                           Style="{StaticResource Subtitulo}" />
+                </VerticalStackLayout>
+
+                <Button Grid.Column="1" Text="+ Nuevo taller" Style="{StaticResource BotonPrimario}"
+                        Command="{Binding NuevoTallerCommand}" VerticalOptions="End" />
+            </Grid>
+
+            <!-- Búsqueda -->
+            <SearchBar Grid.Row="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar taller o instructor"
+                       HorizontalOptions="Start" WidthRequest="360" />
+
+            <!-- Tabla -->
+            <Border Grid.Row="2" Style="{StaticResource Tarjeta}" Padding="0">
+                <Grid RowDefinitions="Auto,*">
+
+                    <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,300" ColumnSpacing="16" Padding="20,0"
+                          HeightRequest="40" BackgroundColor="{StaticResource Fondo}">
+                        <Label Text="TALLER" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="1" Text="INSTRUCTOR" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="2" Text="HORARIO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="3" Text="CUPO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="4" Text="COSTO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                    </Grid>
+
+                    <CollectionView Grid.Row="1" ItemsSource="{Binding Talleres}" SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <Label Text="No hay talleres que coincidan." Style="{StaticResource Subtitulo}"
+                                   HorizontalOptions="Center" Margin="0,40" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,300" ColumnSpacing="16"
+                                      Padding="20,0" HeightRequest="64">
+
+                                    <VerticalStackLayout VerticalOptions="Center" Spacing="2">
+                                        <Label Text="{Binding Nombre}" FontSize="16" FontAttributes="Bold" />
+                                        <Label Text="{Binding Categoria}" Style="{StaticResource Nota}" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1" Text="{Binding Instructor}" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding Horario}" Style="{StaticResource Nota}" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Text="{Binding Cupo}" VerticalOptions="Center" />
+                                    <Label Grid.Column="4" Text="{Binding Costo}" FontAttributes="Bold" VerticalOptions="Center" />
+
+                                    <HorizontalStackLayout Grid.Column="5" Spacing="8" VerticalOptions="Center">
+                                        <Button Text="Ver" Style="{StaticResource BotonSecundario}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VerDetalleTallerCommand}" CommandParameter="{Binding .}" />
+                                        <Button Text="Editar" Style="{StaticResource BotonSecundario}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarTallerCommand}" CommandParameter="{Binding .}" />
+
+                                        <Button Text="Eliminar" Style="{StaticResource BotonPeligro}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EliminarTallerCommand}" CommandParameter="{Binding .}" />
+                                    </HorizontalStackLayout>
+
+                                    <BoxView Grid.ColumnSpan="6" HeightRequest="1" Color="{StaticResource Linea}"
+                                             VerticalOptions="End" Margin="-20,0" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                                       Color="{StaticResource Primario}"
+                                       HorizontalOptions="Center" VerticalOptions="Center" />
+                </Grid>
+            </Border>
+        </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>
