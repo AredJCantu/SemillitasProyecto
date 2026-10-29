@@ -1,41 +1,27 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  WINDOWS · TALLERFORMVIEW — Crear / editar un taller                  ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      Un solo formulario para "Nuevo taller" y "Editar taller". La propiedad
-      EsEdicion decide si se muestra el botón de desactivar.
-
-    ESTRUCTURA:
-      1) Encabezado (Titulo viene del VM) + Cancelar
-      2) Tarjeta del formulario en 2 columnas:
-           Nombre · Categoría · Instructor · Días · Hora inicio/fin · Cupo · Costo
-      3) Pie con Guardar (y Desactivar si EsEdicion)
-
-    VALIDACIÓN:
-      Las reglas (costo > 0, hora fin > inicio, etc.) viven en los VALIDATORS de
-      tu compañero. La vista solo muestra el mensaje que ellos devuelvan:
-      cada campo tiene un Label de error visible según una propiedad bool
-      (TieneErrorNombre, TieneErrorCosto...) con su texto (ErrorNombre, ErrorCosto...).
-      Aquí vienen cableados Nombre y Costo; copia el patrón para los demás.
-
-    PROPIEDADES QUE LEE DEL BindingContext (TwoWay en los campos):
-      Titulo, EsEdicion,
-      Nombre, Categorias, CategoriaSeleccionada, Instructores, InstructorSeleccionado,
-      Dias (cada uno: Texto, Seleccionado bool), HoraInicio (TimeSpan), HoraFin (TimeSpan),
-      CupoMaximo, CostoMensual,
-      TieneErrorNombre/ErrorNombre, TieneErrorCosto/ErrorCosto, IsBusy.
-
-    COMMANDS POR AGREGAR ("TODO COMMAND"):
-      Cancelar · Guardar · Desactivar
+    Crear / editar taller (mismo formulario; EsEdicion muestra Eliminar).
+    Lee (TwoWay): Titulo, EsEdicion, Nombre, Categorias, CategoriaSeleccionada, NombreInstructor,
+         Periodos, PeriodoSeleccionado, CupoMaximo, Costo, Horas, HoraInicio, HoraFin, IsBusy,
+         TieneErrorNombre/ErrorNombre, TieneErrorCosto/ErrorCosto
+    Horas = lista de horas ("3:00 pm"); el DTO guarda enteros (15 = 3 pm).
+    Los mensajes de error vienen de los validators de la API; copia el patrón de Nombre/Costo.
+    Commands: CancelarCommand, GuardarCommand, EliminarCommand
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
              x:Class="SemillitasMobileApp.Views.WindowsViews.TallerFormView"
              Title="Taller">
+
+    <ContentPage.BindingContext>
+        <vm:TallerFormViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
 
     <ContentPage.Resources>
         <Color x:Key="Fondo">#F7F5EF</Color>
@@ -102,21 +88,21 @@
         </Style>
     </ContentPage.Resources>
 
-    <!-- Barra lateral a la izquierda (232) + contenido de la página a la derecha (*) -->
+    <!-- Menú (232) + contenido -->
     <Grid ColumnDefinitions="232,*">
-        <wViews:MenuLateral Activo="Catalogos" />
+        <wViews:MenuLateral Activo="Talleres" />
         <Grid Grid.Column="1">
         <ScrollView BackgroundColor="{StaticResource Fondo}">
             <VerticalStackLayout Spacing="20" Padding="32,24" MaximumWidthRequest="900" HorizontalOptions="Start">
 
-                <!-- ═══════════ 1 · ENCABEZADO ═══════════ -->
+                <!-- Encabezado -->
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Text="{Binding Titulo}" Style="{StaticResource Titulo}" />
-                    <!-- TODO COMMAND: CancelarCommand — vuelve a TalleresView sin guardar. -->
-                    <Button Grid.Column="1" Text="Cancelar" Style="{StaticResource BotonSecundario}" />
+                    <Button Grid.Column="1" Text="Cancelar" Style="{StaticResource BotonSecundario}"
+                            Command="{Binding CancelarCommand}" />
                 </Grid>
 
-                <!-- ═══════════ 2 · FORMULARIO (2 columnas) ═══════════ -->
+                <!-- Formulario (2 columnas) -->
                 <Border Style="{StaticResource Tarjeta}">
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="24" RowSpacing="18"
                           RowDefinitions="Auto,Auto,Auto,Auto,Auto">
@@ -129,7 +115,7 @@
                                    IsVisible="{Binding TieneErrorNombre}" />
                         </VerticalStackLayout>
 
-                        <!-- Categoría / Instructor -->
+                        <!-- Categoría (lista fija: Arte, Deportes, Tecnología) / Instructor (texto libre) -->
                         <VerticalStackLayout Grid.Row="1" Spacing="6">
                             <Label Text="Categoría" Style="{StaticResource Etiqueta}" />
                             <Picker ItemsSource="{Binding Categorias}"
@@ -137,64 +123,49 @@
                         </VerticalStackLayout>
                         <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
                             <Label Text="Instructor" Style="{StaticResource Etiqueta}" />
-                            <Picker ItemsSource="{Binding Instructores}"
-                                    SelectedItem="{Binding InstructorSeleccionado}" Title="Elige un instructor" />
+                            <Entry Text="{Binding NombreInstructor}" Placeholder="Ej. Prof. Laura Méndez" />
                         </VerticalStackLayout>
 
-                        <!-- Días: casillas generadas desde la lista Dias -->
-                        <VerticalStackLayout Grid.Row="2" Grid.ColumnSpan="2" Spacing="6">
-                            <Label Text="Días en que se imparte" Style="{StaticResource Etiqueta}" />
-                            <HorizontalStackLayout Spacing="20" BindableLayout.ItemsSource="{Binding Dias}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate>
-                                        <HorizontalStackLayout Spacing="4">
-                                            <CheckBox IsChecked="{Binding Seleccionado}" Color="{StaticResource Primario}" />
-                                            <Label Text="{Binding Texto}" VerticalOptions="Center" />
-                                        </HorizontalStackLayout>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </HorizontalStackLayout>
+                        <!-- Período al que pertenece el taller / Cupo -->
+                        <VerticalStackLayout Grid.Row="2" Spacing="6">
+                            <Label Text="Período" Style="{StaticResource Etiqueta}" />
+                            <Picker ItemsSource="{Binding Periodos}"
+                                    SelectedItem="{Binding PeriodoSeleccionado}" Title="Elige un período" />
                         </VerticalStackLayout>
-
-                        <!-- Horas -->
-                        <VerticalStackLayout Grid.Row="3" Spacing="6">
-                            <Label Text="Hora de inicio" Style="{StaticResource Etiqueta}" />
-                            <TimePicker Time="{Binding HoraInicio}" />
-                        </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="6">
-                            <Label Text="Hora de fin" Style="{StaticResource Etiqueta}" />
-                            <TimePicker Time="{Binding HoraFin}" />
-                        </VerticalStackLayout>
-
-                        <!-- Cupo / Costo -->
-                        <VerticalStackLayout Grid.Row="4" Spacing="6">
+                        <VerticalStackLayout Grid.Row="2" Grid.Column="1" Spacing="6">
                             <Label Text="Cupo máximo" Style="{StaticResource Etiqueta}" />
                             <Entry Text="{Binding CupoMaximo}" Keyboard="Numeric" />
                         </VerticalStackLayout>
-                        <VerticalStackLayout Grid.Row="4" Grid.Column="1" Spacing="6">
-                            <Label Text="Costo mensual ($)" Style="{StaticResource Etiqueta}" />
-                            <Entry Text="{Binding CostoMensual}" Keyboard="Numeric" />
-                            <!-- El mensaje viene del validator; la vista solo lo muestra. -->
+
+                        <!-- Horario: la base guarda horas enteras (15 = 3 pm), por eso listas y no TimePicker -->
+                        <VerticalStackLayout Grid.Row="3" Spacing="6">
+                            <Label Text="Hora de inicio" Style="{StaticResource Etiqueta}" />
+                            <Picker ItemsSource="{Binding Horas}" SelectedItem="{Binding HoraInicio}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Row="3" Grid.Column="1" Spacing="6">
+                            <Label Text="Hora de fin" Style="{StaticResource Etiqueta}" />
+                            <Picker ItemsSource="{Binding Horas}" SelectedItem="{Binding HoraFin}" />
+                        </VerticalStackLayout>
+
+                        <!-- Costo (máximo 999.99 en la base) -->
+                        <VerticalStackLayout Grid.Row="4" Spacing="6">
+                            <Label Text="Costo ($)" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding Costo}" Keyboard="Numeric" />
                             <Label Text="{Binding ErrorCosto}" Style="{StaticResource Error}"
                                    IsVisible="{Binding TieneErrorCosto}" />
                         </VerticalStackLayout>
                     </Grid>
                 </Border>
 
-                <!-- ═══════════ 3 · PIE DE ACCIONES ═══════════ -->
+                <!-- Pie de acciones -->
                 <Grid ColumnDefinitions="Auto,*,Auto">
-                    <!-- TODO COMMAND: DesactivarCommand
-                         Solo visible al editar (EsEdicion = true). Confirmar con DisplayAlert antes de llamar a la API. -->
-                    <Button Text="Desactivar taller" Style="{StaticResource BotonPeligro}"
-                            IsVisible="{Binding EsEdicion}" />
+                    <Button Text="Eliminar taller" Style="{StaticResource BotonPeligro}"
+                            Command="{Binding EliminarCommand}" IsVisible="{Binding EsEdicion}" />
 
                     <HorizontalStackLayout Grid.Column="2" Spacing="12">
                         <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
                                            Color="{StaticResource Primario}" VerticalOptions="Center" />
-                        <!-- TODO COMMAND: GuardarCommand
-                             Qué hace: manda el DTO a la API (crear o actualizar según EsEdicion).
-                             Si la API/validators devuelven errores, el VM llena Error* y Tiene* y la vista los muestra. -->
-                        <Button Text="Guardar taller" Style="{StaticResource BotonPrimario}" />
+                        <Button Text="Guardar taller" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
                     </HorizontalStackLayout>
                 </Grid>
             </VerticalStackLayout>

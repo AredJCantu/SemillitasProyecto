@@ -1,35 +1,26 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  WINDOWS · TALLERESVIEW — Catálogo de talleres (administración)       ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      Lista de todos los talleres con acciones de Editar y Desactivar.
-      Es la puerta de entrada al formulario (TallerFormView).
-
-    ESTRUCTURA:
-      1) Encabezado + botón "+ Nuevo taller"
-      2) Búsqueda
-      3) Tabla: Nombre/Categoría, Instructor, Horario, Cupo, Costo, Acciones
-
-    DESACTIVAR (no "eliminar"):
-      Es un borrado lógico: el taller deja de ofrecerse pero se conserva su
-      historial de inscripciones. La confirmación se hace con DisplayAlert
-      desde el código del Command (ver comentario en el botón).
-
-    PROPIEDADES QUE LEE DEL BindingContext:
-      TextoBusqueda, IsBusy, Talleres
-        (cada uno: Nombre, Categoria, Instructor, Horario, Cupo, Costo)
-
-    COMMANDS POR AGREGAR ("TODO COMMAND"):
-      Nuevo taller · Editar (fila) · Desactivar (fila)
+    Catálogo de talleres.
+    Lee: TextoBusqueda, IsBusy, Talleres[Nombre, Categoria, Instructor, Horario, Cupo, Costo]
+    Horario = "3–5 pm"; Categoria = Arte | Deportes | Tecnología
+    Commands: NuevoTallerCommand, VerDetalleTallerCommand (fila), EditarTallerCommand (fila), EliminarTallerCommand (fila)
+    Pendiente con la API: no hay columna "activo", así que se muestra Eliminar
+    (solo posible si el taller no tiene inscripciones).
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
              x:Class="SemillitasMobileApp.Views.WindowsViews.TalleresView"
              Title="Talleres">
+
+    <ContentPage.BindingContext>
+        <vm:TalleresViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
 
     <ContentPage.Resources>
         <Color x:Key="Fondo">#F7F5EF</Color>
@@ -83,42 +74,39 @@
             <Setter Property="HeightRequest" Value="40" />
             <Setter Property="Padding" Value="14,0" />
         </Style>
-        <!-- Botón de peligro: texto rojo, para Desactivar -->
+        <!-- Botón de peligro -->
         <Style x:Key="BotonPeligro" TargetType="Button" BasedOn="{StaticResource BotonSecundario}">
             <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
         </Style>
     </ContentPage.Resources>
 
-    <!-- Barra lateral a la izquierda (232) + contenido de la página a la derecha (*) -->
+    <!-- Menú (232) + contenido -->
     <Grid ColumnDefinitions="232,*">
-        <wViews:MenuLateral Activo="Catalogos" />
+        <wViews:MenuLateral Activo="Talleres" />
         <Grid Grid.Column="1">
         <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16" Padding="32,24" BackgroundColor="{StaticResource Fondo}">
 
-            <!-- ═══════════ 1 · ENCABEZADO ═══════════ -->
+            <!-- Encabezado -->
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Talleres" Style="{StaticResource Titulo}" />
-                    <Label Text="Administra el catálogo: crea, edita o desactiva talleres."
+                    <Label Text="Administra el catálogo: crea, edita o elimina talleres."
                            Style="{StaticResource Subtitulo}" />
                 </VerticalStackLayout>
 
-                <!-- TODO COMMAND: NuevoTallerCommand
-                     Qué hace: abre TallerFormView vacío (Titulo="Nuevo taller", EsEdicion=false). -->
                 <Button Grid.Column="1" Text="+ Nuevo taller" Style="{StaticResource BotonPrimario}"
-                        VerticalOptions="End" />
+                        Command="{Binding NuevoTallerCommand}" VerticalOptions="End" />
             </Grid>
 
-            <!-- ═══════════ 2 · BÚSQUEDA ═══════════ -->
+            <!-- Búsqueda -->
             <SearchBar Grid.Row="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar taller o instructor"
                        HorizontalOptions="Start" WidthRequest="360" />
 
-            <!-- ═══════════ 3 · TABLA ═══════════
-                 Columnas (encabezado = filas): "2.2*,1.6*,2*,90,90,230" -->
+            <!-- Tabla -->
             <Border Grid.Row="2" Style="{StaticResource Tarjeta}" Padding="0">
                 <Grid RowDefinitions="Auto,*">
 
-                    <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,230" ColumnSpacing="16" Padding="20,0"
+                    <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,300" ColumnSpacing="16" Padding="20,0"
                           HeightRequest="40" BackgroundColor="{StaticResource Fondo}">
                         <Label Text="TALLER" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                         <Label Grid.Column="1" Text="INSTRUCTOR" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
@@ -134,7 +122,7 @@
                         </CollectionView.EmptyView>
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,230" ColumnSpacing="16"
+                                <Grid ColumnDefinitions="2.2*,1.6*,2*,90,90,300" ColumnSpacing="16"
                                       Padding="20,0" HeightRequest="64">
 
                                     <VerticalStackLayout VerticalOptions="Center" Spacing="2">
@@ -147,19 +135,13 @@
                                     <Label Grid.Column="4" Text="{Binding Costo}" FontAttributes="Bold" VerticalOptions="Center" />
 
                                     <HorizontalStackLayout Grid.Column="5" Spacing="8" VerticalOptions="Center">
-                                        <!-- TODO COMMAND: EditarTallerCommand
-                                             Qué hace: abre TallerFormView con los datos de este taller.
-                                             Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                               Path=BindingContext.EditarTallerCommand}"
-                                             CommandParameter="{Binding .}" -->
-                                        <Button Text="Editar" Style="{StaticResource BotonSecundario}" />
+                                        <Button Text="Ver" Style="{StaticResource BotonSecundario}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.VerDetalleTallerCommand}" CommandParameter="{Binding .}" />
+                                        <Button Text="Editar" Style="{StaticResource BotonSecundario}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditarTallerCommand}" CommandParameter="{Binding .}" />
 
-                                        <!-- TODO COMMAND: DesactivarTallerCommand
-                                             Qué hace: borrado lógico. Antes de llamar a la API, pedir confirmación:
-                                               bool ok = await Shell.Current.DisplayAlert(   // .NET 10: DisplayAlertAsync
-                                                   "Desactivar taller", "¿Seguro? Se conservará su historial.", "Desactivar", "Cancelar");
-                                             Mismo patrón RelativeSource + CommandParameter="{Binding .}". -->
-                                        <Button Text="Desactivar" Style="{StaticResource BotonPeligro}" />
+                                        <Button Text="Eliminar" Style="{StaticResource BotonPeligro}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EliminarTallerCommand}" CommandParameter="{Binding .}" />
                                     </HorizontalStackLayout>
 
                                     <BoxView Grid.ColumnSpan="6" HeightRequest="1" Color="{StaticResource Linea}"

@@ -1,43 +1,30 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  WINDOWS · MAINVIEW — Disponibilidad de talleres (pantalla principal) ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      Que la recepcionista responda "¿hay lugar?" en segundos.
-
-    ESTRUCTURA (arriba → abajo):
-      Fila 0  Encabezado: título + selector de período + botón "Nueva inscripción"
-      Fila 1  Filtros: búsqueda, "Solo con cupo", contadores de colores
-      Fila 2  Chips de categoría
-      Fila 3  Tabla de talleres (una fila por taller, con barra de cupo)
-      Fila 4  Pie: "Mostrando X de Y" + paginación
-
-    PROPIEDADES QUE ESTA VISTA LEE DEL BindingContext (nombres exactos):
-      Periodos, PeriodoSeleccionado, TextoBusqueda, SoloConCupo,
-      Categorias (cada una con Texto), CategoriaSeleccionada,
-      ConteoConCupo, ConteoPocos, ConteoLlenos,
-      Talleres (cada uno con: Nombre, Meta, Horario, Ocupacion, Porcentaje,
-               Badge, Tono, TieneCupo),
-      IsBusy, ResumenListado.
-      · Porcentaje va de 0 a 1 (9/15 = 0.6).
-      · Tono es el texto "Verde", "Ambar" o "Rojo".
-
-    COMMANDS POR AGREGAR (busca "TODO COMMAND"):
-      Nueva inscripción · Inscribir (cada fila) · Anterior / Siguiente
-
-    NOTA: esta vista no usa x:DataType, así que no depende de ningún
-    ViewModel concreto: solo de los NOMBRES de propiedad de arriba.
+    Disponibilidad de talleres.
+    Lee: Periodos, PeriodoSeleccionado, TextoBusqueda, SoloConCupo, Categorias[Texto],
+         CategoriaSeleccionada, ConteoConCupo, ConteoPocos, ConteoLlenos, IsBusy, ResumenListado,
+         Talleres[Nombre, Meta, Horario, Ocupacion, Porcentaje (0-1), Badge, Tono, TieneCupo]
+    Meta = "Categoría · Instructor · $costo"; Horario = "3–5 pm"; Tono = Verde | Ambar | Rojo
+    Commands: NuevaInscripcionCommand, InscribirTallerCommand (fila),
+              PaginaAnteriorCommand, PaginaSiguienteCommand
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
              x:Class="SemillitasMobileApp.Views.WindowsViews.MainView"
              Title="Disponibilidad">
 
+    <ContentPage.BindingContext>
+        <vm:DisponibilidadViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
+
     <ContentPage.Resources>
-        <!-- ══ COLORES: cambia aquí y se actualiza toda la vista ══ -->
+        <!-- Colores -->
         <Color x:Key="Fondo">#F7F5EF</Color>
         <Color x:Key="Blanco">#FFFFFF</Color>
         <Color x:Key="Tinta">#1F2A24</Color>
@@ -57,7 +44,7 @@
         <Color x:Key="RojoTexto">#8E2A17</Color>
         <Color x:Key="RojoBarra">#B23A24</Color>
 
-        <!-- ══ ESTILOS IMPLÍCITOS (se aplican solos) ══ -->
+        <!-- Estilos implícitos -->
         <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
         <Style TargetType="Picker">
             <Setter Property="TextColor" Value="{StaticResource Tinta}" />
@@ -68,7 +55,7 @@
             <Setter Property="HeightRequest" Value="44" />
         </Style>
 
-        <!-- ══ ESTILOS CON NOMBRE (se piden con Style="{StaticResource ...}") ══ -->
+        <!-- Estilos con nombre -->
         <Style x:Key="Titulo" TargetType="Label">
             <Setter Property="FontSize" Value="28" />
             <Setter Property="FontAttributes" Value="Bold" />
@@ -139,9 +126,7 @@
             <Setter Property="Padding" Value="18,0" />
         </Style>
 
-        <!-- BadgeBorder + BadgeTexto: la "píldora" de estado ("Quedan 6", "Lleno").
-             Cambian de color según la propiedad Tono del elemento (Verde/Ambar/Rojo).
-             Se usan juntos: un Border con BadgeBorder que contiene un Label con BadgeTexto. -->
+        <!-- Píldora de estado: Border + Label, el color depende de Tono -->
         <Style x:Key="BadgeBorder" TargetType="Border">
             <Setter Property="HeightRequest" Value="30" />
             <Setter Property="Padding" Value="12,0" />
@@ -189,16 +174,15 @@
         </Style>
     </ContentPage.Resources>
 
-    <!-- Barra lateral a la izquierda (232) + contenido de la página a la derecha (*) -->
+    <!-- Menú (232) + contenido -->
     <Grid ColumnDefinitions="232,*">
         <wViews:MenuLateral Activo="Disponibilidad" />
         <Grid Grid.Column="1">
-        <!-- El fondo se pone en este Grid raíz (y no en el ContentPage) para poder usar
-             el color definido en los Resources de esta misma página. -->
+        <!-- El fondo va en este Grid (no en el ContentPage) para usar los Resources de la página -->
         <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" RowSpacing="16" Padding="32,24"
               BackgroundColor="{StaticResource Fondo}">
 
-            <!-- ═══════════ FILA 0 · ENCABEZADO ═══════════ -->
+            <!-- Fila 0 · encabezado -->
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Disponibilidad de talleres" Style="{StaticResource Titulo}" />
@@ -207,24 +191,21 @@
                 </VerticalStackLayout>
 
                 <HorizontalStackLayout Grid.Column="1" Spacing="12" VerticalOptions="End">
-                    <!-- Selector de período. SelectedItem es TwoWay por defecto en Picker. -->
+                    <!-- Selector de período -->
                     <Picker ItemsSource="{Binding Periodos}"
                             SelectedItem="{Binding PeriodoSeleccionado}"
                             Title="Período"
                             WidthRequest="170" />
 
-                    <!-- TODO COMMAND: NuevaInscripcionCommand
-                         Qué hace: abre la vista de inscripción (InscripcionView).
-                         Cómo: Command="{Binding NuevaInscripcionCommand}" -->
-                    <Button Text="+ Nueva inscripción" Style="{StaticResource BotonPrimario}" />
+                    <Button Text="+ Nueva inscripción" Style="{StaticResource BotonPrimario}"
+                            Command="{Binding NuevaInscripcionCommand}" />
                 </HorizontalStackLayout>
             </Grid>
 
-            <!-- ═══════════ FILA 1 · FILTROS ═══════════ -->
+            <!-- Fila 1 · filtros -->
             <Grid Grid.Row="1" ColumnDefinitions="320,Auto,*" ColumnSpacing="20">
 
-                <!-- Búsqueda. TODO: al cambiar TextoBusqueda, la lista debe volver a filtrarse
-                     (lo resuelve quien programe el ViewModel). -->
+                <!-- Búsqueda: el filtrado lo hace el ViewModel al cambiar TextoBusqueda -->
                 <SearchBar Text="{Binding TextoBusqueda}" Placeholder="Buscar taller o instructor" />
 
                 <!-- Casilla "Solo con cupo" → bool SoloConCupo -->
@@ -253,8 +234,7 @@
                 </HorizontalStackLayout>
             </Grid>
 
-            <!-- ═══════════ FILA 2 · CHIPS DE CATEGORÍA ═══════════
-                 Selección única; el chip seleccionado se pinta solo (estilo Chip). -->
+            <!-- Fila 2 · chips de categoría -->
             <CollectionView Grid.Row="2"
                             ItemsSource="{Binding Categorias}"
                             SelectionMode="Single"
@@ -272,10 +252,7 @@
                 </CollectionView.ItemTemplate>
             </CollectionView>
 
-            <!-- ═══════════ FILA 3 · TABLA DE TALLERES ═══════════
-                 Border con 2 renglones: encabezado fijo y lista con scroll.
-                 Las 5 columnas de cada fila usan las MISMAS proporciones que el encabezado:
-                 "2.2*,1.6*,2.2*,1.2*,120"  (si cambias una, cambia la otra). -->
+            <!-- Fila 3 · tabla de talleres -->
             <Border Grid.Row="3" Style="{StaticResource Tarjeta}" Padding="0">
                 <Grid RowDefinitions="Auto,*">
 
@@ -294,7 +271,7 @@
                                    HorizontalOptions="Center" Margin="0,40" />
                         </CollectionView.EmptyView>
 
-                        <!-- Plantilla de UNA fila. Aquí {Binding Nombre} se refiere al taller de esa fila. -->
+                        <!-- Plantilla de una fila -->
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
                                 <Grid ColumnDefinitions="2.2*,1.6*,2.2*,1.2*,120" ColumnSpacing="16"
@@ -321,17 +298,9 @@
                                         <Label Text="{Binding Badge}" Style="{StaticResource BadgeTexto}" />
                                     </Border>
 
-                                    <!-- TODO COMMAND: InscribirTallerCommand
-                                         Qué hace: abre la inscripción con este taller ya elegido.
-                                         Este botón está DENTRO de una plantilla, así que su contexto es
-                                         el taller de la fila, no la vista. Para llegar al Command de la
-                                         vista se usa RelativeSource, y se manda la fila como parámetro:
-                                           Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                             Path=BindingContext.InscribirTallerCommand}"
-                                           CommandParameter="{Binding .}"
-                                         El trigger apaga el botón cuando TieneCupo = false.
-                                         Es solo apariencia: la validación REAL la hace la API. -->
+                                    <!-- La fila no ve el Command de la página: se llega con RelativeSource -->
                                     <Button Grid.Column="4" Text="Inscribir" Style="{StaticResource BotonSecundario}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.InscribirTallerCommand}" CommandParameter="{Binding .}"
                                             VerticalOptions="Center">
                                         <Button.Triggers>
                                             <DataTrigger TargetType="Button" Binding="{Binding TieneCupo}" Value="False">
@@ -357,15 +326,12 @@
                 </Grid>
             </Border>
 
-            <!-- ═══════════ FILA 4 · PIE ═══════════ -->
+            <!-- Fila 4 · pie -->
             <Grid Grid.Row="4" ColumnDefinitions="*,Auto">
                 <Label Text="{Binding ResumenListado}" Style="{StaticResource Nota}" VerticalOptions="Center" />
                 <HorizontalStackLayout Grid.Column="1" Spacing="8">
-                    <!-- TODO COMMAND: PaginaAnteriorCommand / PaginaSiguienteCommand
-                         Qué hacen: pedir la página anterior/siguiente.
-                         Idea: que CanExecute sea false en la primera/última página. -->
-                    <Button Text="Anterior" Style="{StaticResource BotonSecundario}" />
-                    <Button Text="Siguiente" Style="{StaticResource BotonSecundario}" />
+                    <Button Text="Anterior" Style="{StaticResource BotonSecundario}" Command="{Binding PaginaAnteriorCommand}" />
+                    <Button Text="Siguiente" Style="{StaticResource BotonSecundario}" Command="{Binding PaginaSiguienteCommand}" />
                 </HorizontalStackLayout>
             </Grid>
         </Grid>

@@ -1,35 +1,26 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  ANDROID · MAINVIEW — Disponibilidad (consulta de la directora)       ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      La directora consulta desde el celular cuánto cupo queda en cada taller.
-      Es SOLO LECTURA: no hay botón de inscribir (eso se hace en Windows).
-
-    ESTRUCTURA (de arriba a abajo, una columna):
-      1) Título + selector de período
-      2) Buscador
-      3) Resumen: cuántos con cupo / pocos / llenos
-      4) Chips de categoría (scroll horizontal)
-      5) Lista de TARJETAS (en celular las tablas no caben, se usan tarjetas)
-
-    PROPIEDADES QUE LEE DEL BindingContext:
-      Periodos, PeriodoSeleccionado, TextoBusqueda,
-      ConteoConCupo, ConteoPocos, ConteoLlenos,
-      Categorias (Texto), CategoriaSeleccionada, IsBusy,
-      Talleres (cada uno: Nombre, Meta, Horario, Ocupacion, Porcentaje 0–1, Badge, Tono)
-      · Tono: "Verde" | "Ambar" | "Rojo" (lo decide la API).
-
-    COMMANDS POR AGREGAR ("TODO COMMAND"):
-      Tocar una tarjeta para ver detalle (opcional).
+    Disponibilidad (consulta, solo lectura).
+    Lee: Periodos, PeriodoSeleccionado, TextoBusqueda, ConteoConCupo, ConteoPocos, ConteoLlenos,
+         Categorias[Texto], CategoriaSeleccionada, IsBusy,
+         Talleres[Nombre, Meta, Horario, Ocupacion, Porcentaje (0-1), Badge, Tono]
+    Meta = "Categoría · Instructor · $costo"; Horario = "3–5 pm"; Tono = Verde | Ambar | Rojo
+    Sin Commands.
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="SemillitasMobileApp.Views.AndroidViews.MainView"
              Title="Disponibilidad"
              Shell.NavBarIsVisible="False">
+
+    <ContentPage.BindingContext>
+        <vm:DisponibilidadViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
 
     <ContentPage.Resources>
         <Color x:Key="Fondo">#F7F5EF</Color>
@@ -144,17 +135,17 @@
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12" Padding="16,16,16,0"
           BackgroundColor="{StaticResource Fondo}">
 
-        <!-- ═══════════ 1 · TÍTULO + PERÍODO ═══════════ -->
+        <!-- Título + período -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <Label Text="Disponibilidad" Style="{StaticResource Titulo}" VerticalOptions="Center" />
             <Picker Grid.Column="1" ItemsSource="{Binding Periodos}"
                     SelectedItem="{Binding PeriodoSeleccionado}" Title="Período" WidthRequest="130" />
         </Grid>
 
-        <!-- ═══════════ 2 · BUSCADOR ═══════════ -->
+        <!-- Buscador -->
         <SearchBar Grid.Row="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar taller" />
 
-        <!-- ═══════════ 3 · RESUMEN (3 contadores iguales) ═══════════ -->
+        <!-- Resumen (3 contadores iguales) -->
         <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="8">
             <Border Style="{StaticResource Tarjeta}" Padding="10" BackgroundColor="{StaticResource VerdeFondo}" StrokeThickness="0">
                 <VerticalStackLayout HorizontalOptions="Center">
@@ -176,7 +167,7 @@
             </Border>
         </Grid>
 
-        <!-- ═══════════ 4 · CHIPS DE CATEGORÍA ═══════════ -->
+        <!-- Chips de categoría -->
         <CollectionView Grid.Row="3" ItemsSource="{Binding Categorias}" SelectionMode="Single"
                         SelectedItem="{Binding CategoriaSeleccionada}" HeightRequest="48">
             <CollectionView.ItemsLayout>
@@ -191,7 +182,7 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <!-- ═══════════ 5 · LISTA DE TARJETAS ═══════════ -->
+        <!-- Lista de tarjetas -->
         <CollectionView Grid.Row="4" ItemsSource="{Binding Talleres}" SelectionMode="None">
             <CollectionView.EmptyView>
                 <Label Text="No hay talleres con estos filtros." Style="{StaticResource Nota}"
@@ -202,8 +193,6 @@
             </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <!-- TODO COMMAND (opcional): VerDetalleTallerCommand
-                         Se añadiría con un TapGestureRecognizer en este Border. -->
                     <Border Style="{StaticResource Tarjeta}">
                         <VerticalStackLayout Spacing="8">
                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">

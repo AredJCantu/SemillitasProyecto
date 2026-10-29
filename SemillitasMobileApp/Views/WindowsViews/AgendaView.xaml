@@ -1,37 +1,24 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  WINDOWS · AGENDAVIEW — Horario semanal de talleres                   ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      Ver de un vistazo qué taller ocurre cada día y a qué hora (lunes a
-      viernes, 3:00 a 6:30 pm), para detectar huecos o choques de salón.
-
-    CÓMO FUNCIONA LA CUADRÍCULA:
-      Un Grid con:
-        columna 0       = horas
-        columnas 1 a 10 = 5 días × 2 columnas cada uno (para poder poner dos
-                          talleres lado a lado el mismo día)
-        fila 0          = encabezado con los días
-        filas 1 a 8     = bloques de 30 min (3:00, 3:30 ... 6:30 pm)
-      Cada evento (taller) llega con su posición YA calculada por la API/VM:
-        Fila, Filas (cuántos bloques dura), Columna, Columnas (1 o 2).
-      La vista solo lo coloca con Grid.Row / Grid.RowSpan / Grid.Column / Grid.ColumnSpan.
-
-    PROPIEDADES QUE LEE DEL BindingContext:
-      Periodos, PeriodoSeleccionado, Eventos
-        (cada uno: Nombre, Detalle, Categoria = "Arte"|"Deportes"|"Tecnologia"|"Idiomas",
-                   Fila, Filas, Columna, Columnas)
-
-    COMMANDS POR AGREGAR ("TODO COMMAND"):
-      Tocar un evento para ver detalle (opcional, ver comentario en la plantilla)
+    Agenda: talleres agrupados por franja horaria (HoraInicio–HoraFin).
+    Lee: Periodos, PeriodoSeleccionado, Franjas[Hora, Talleres[Nombre, Detalle, Categoria]]
+    Detalle = "Instructor · inscritos/cupo"; Categoria = Arte | Deportes | Tecnologia
+    Sin Commands (consulta).
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
              x:Class="SemillitasMobileApp.Views.WindowsViews.AgendaView"
              Title="Agenda">
+
+    <ContentPage.BindingContext>
+        <vm:AgendaViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
 
     <ContentPage.Resources>
         <Color x:Key="Fondo">#F7F5EF</Color>
@@ -39,15 +26,12 @@
         <Color x:Key="Tinta">#1F2A24</Color>
         <Color x:Key="TintaSuave">#5A655E</Color>
         <Color x:Key="Linea">#E2DED2</Color>
-        <!-- Un par fondo/texto por categoría -->
         <Color x:Key="ArteFondo">#F6D9D2</Color>
         <Color x:Key="ArteTexto">#8E2A17</Color>
         <Color x:Key="DeportesFondo">#DDEFE4</Color>
         <Color x:Key="DeportesTexto">#1E5A3D</Color>
         <Color x:Key="TecnologiaFondo">#DCE6F7</Color>
         <Color x:Key="TecnologiaTexto">#1F4A8A</Color>
-        <Color x:Key="IdiomasFondo">#FBEBC4</Color>
-        <Color x:Key="IdiomasTexto">#7A4B00</Color>
 
         <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
         <Style TargetType="Picker">
@@ -62,6 +46,10 @@
             <Setter Property="FontSize" Value="15" />
             <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
         </Style>
+        <Style x:Key="Seccion" TargetType="Label">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
         <Style x:Key="Nota" TargetType="Label">
             <Setter Property="FontSize" Value="13" />
             <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
@@ -73,25 +61,13 @@
             <Setter Property="Padding" Value="16" />
             <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
         </Style>
-        <Style x:Key="Encabezado" TargetType="Label">
-            <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="FontSize" Value="14" />
-            <Setter Property="HorizontalTextAlignment" Value="Center" />
-            <Setter Property="VerticalOptions" Value="Center" />
-        </Style>
-        <Style x:Key="Hora" TargetType="Label" BasedOn="{StaticResource Nota}">
-            <Setter Property="VerticalOptions" Value="Start" />
-            <Setter Property="HorizontalTextAlignment" Value="End" />
-            <Setter Property="Margin" Value="0,2,8,0" />
-        </Style>
 
-        <!-- Bloque de evento: el color cambia según Categoria -->
+        <!-- Bloque de taller: el color cambia según Categoria -->
         <Style x:Key="Evento" TargetType="Border">
-            <Setter Property="Margin" Value="2" />
-            <Setter Property="Padding" Value="8,6" />
+            <Setter Property="Padding" Value="12,8" />
             <Setter Property="StrokeThickness" Value="0" />
             <Setter Property="BackgroundColor" Value="{StaticResource ArteFondo}" />
-            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="8" /></Setter.Value></Setter>
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="10" /></Setter.Value></Setter>
             <Style.Triggers>
                 <DataTrigger TargetType="Border" Binding="{Binding Categoria}" Value="Deportes">
                     <Setter Property="BackgroundColor" Value="{StaticResource DeportesFondo}" />
@@ -99,14 +75,11 @@
                 <DataTrigger TargetType="Border" Binding="{Binding Categoria}" Value="Tecnologia">
                     <Setter Property="BackgroundColor" Value="{StaticResource TecnologiaFondo}" />
                 </DataTrigger>
-                <DataTrigger TargetType="Border" Binding="{Binding Categoria}" Value="Idiomas">
-                    <Setter Property="BackgroundColor" Value="{StaticResource IdiomasFondo}" />
-                </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="EventoTexto" TargetType="Label">
             <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontSize" Value="14" />
             <Setter Property="TextColor" Value="{StaticResource ArteTexto}" />
             <Style.Triggers>
                 <DataTrigger TargetType="Label" Binding="{Binding Categoria}" Value="Deportes">
@@ -115,90 +88,56 @@
                 <DataTrigger TargetType="Label" Binding="{Binding Categoria}" Value="Tecnologia">
                     <Setter Property="TextColor" Value="{StaticResource TecnologiaTexto}" />
                 </DataTrigger>
-                <DataTrigger TargetType="Label" Binding="{Binding Categoria}" Value="Idiomas">
-                    <Setter Property="TextColor" Value="{StaticResource IdiomasTexto}" />
-                </DataTrigger>
             </Style.Triggers>
         </Style>
     </ContentPage.Resources>
 
-    <!-- Barra lateral a la izquierda (232) + contenido de la página a la derecha (*) -->
+    <!-- Menú (232) + contenido -->
     <Grid ColumnDefinitions="232,*">
         <wViews:MenuLateral Activo="Agenda" />
         <Grid Grid.Column="1">
         <Grid RowDefinitions="Auto,*" RowSpacing="16" Padding="32,24" BackgroundColor="{StaticResource Fondo}">
 
-            <!-- ═══════════ ENCABEZADO ═══════════ -->
+            <!-- Encabezado -->
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                 <VerticalStackLayout Spacing="4">
-                    <Label Text="Agenda semanal" Style="{StaticResource Titulo}" />
-                    <Label Text="Horario de todos los talleres del período, de lunes a viernes."
+                    <Label Text="Agenda" Style="{StaticResource Titulo}" />
+                    <Label Text="Talleres del período agrupados por franja horaria."
                            Style="{StaticResource Subtitulo}" />
                 </VerticalStackLayout>
                 <Picker Grid.Column="1" ItemsSource="{Binding Periodos}"
                         SelectedItem="{Binding PeriodoSeleccionado}"
-                        Title="Período" WidthRequest="170" VerticalOptions="End" />
+                        Title="Período" WidthRequest="190" VerticalOptions="End" />
             </Grid>
 
-            <!-- ═══════════ CUADRÍCULA ═══════════ -->
-            <Border Grid.Row="1" Style="{StaticResource Tarjeta}" Padding="12">
-                <Grid>
-                    <!-- CAPA 1: el esqueleto (líneas, horas y días). No cambia nunca. -->
-                    <Grid ColumnDefinitions="70,*,*,*,*,*,*,*,*,*,*"
-                          RowDefinitions="36,*,*,*,*,*,*,*,*">
-
-                        <!-- Encabezados de día: cada uno ocupa 2 columnas -->
-                        <Label Grid.Column="1" Grid.ColumnSpan="2" Text="Lunes" Style="{StaticResource Encabezado}" />
-                        <Label Grid.Column="3" Grid.ColumnSpan="2" Text="Martes" Style="{StaticResource Encabezado}" />
-                        <Label Grid.Column="5" Grid.ColumnSpan="2" Text="Miércoles" Style="{StaticResource Encabezado}" />
-                        <Label Grid.Column="7" Grid.ColumnSpan="2" Text="Jueves" Style="{StaticResource Encabezado}" />
-                        <Label Grid.Column="9" Grid.ColumnSpan="2" Text="Viernes" Style="{StaticResource Encabezado}" />
-
-                        <!-- Horas (una por hora completa = cada 2 filas) -->
-                        <Label Grid.Row="1" Text="3:00 pm" Style="{StaticResource Hora}" />
-                        <Label Grid.Row="3" Text="4:00 pm" Style="{StaticResource Hora}" />
-                        <Label Grid.Row="5" Text="5:00 pm" Style="{StaticResource Hora}" />
-                        <Label Grid.Row="7" Text="6:00 pm" Style="{StaticResource Hora}" />
-
-                        <!-- Líneas horizontales cada hora -->
-                        <BoxView Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="10" HeightRequest="1" Color="{StaticResource Linea}" VerticalOptions="Start" />
-                        <BoxView Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="10" HeightRequest="1" Color="{StaticResource Linea}" VerticalOptions="Start" />
-                        <BoxView Grid.Row="5" Grid.Column="1" Grid.ColumnSpan="10" HeightRequest="1" Color="{StaticResource Linea}" VerticalOptions="Start" />
-                        <BoxView Grid.Row="7" Grid.Column="1" Grid.ColumnSpan="10" HeightRequest="1" Color="{StaticResource Linea}" VerticalOptions="Start" />
-
-                        <!-- Líneas verticales entre días -->
-                        <BoxView Grid.Column="1" Grid.RowSpan="9" WidthRequest="1" Color="{StaticResource Linea}" HorizontalOptions="Start" />
-                        <BoxView Grid.Column="3" Grid.RowSpan="9" WidthRequest="1" Color="{StaticResource Linea}" HorizontalOptions="Start" />
-                        <BoxView Grid.Column="5" Grid.RowSpan="9" WidthRequest="1" Color="{StaticResource Linea}" HorizontalOptions="Start" />
-                        <BoxView Grid.Column="7" Grid.RowSpan="9" WidthRequest="1" Color="{StaticResource Linea}" HorizontalOptions="Start" />
-                        <BoxView Grid.Column="9" Grid.RowSpan="9" WidthRequest="1" Color="{StaticResource Linea}" HorizontalOptions="Start" />
-                    </Grid>
-
-                    <!-- CAPA 2: los eventos, encima del esqueleto. Mismas filas y columnas
-                         que la capa 1, para que Fila/Columna coincidan exactamente. -->
-                    <Grid ColumnDefinitions="70,*,*,*,*,*,*,*,*,*,*"
-                          RowDefinitions="36,*,*,*,*,*,*,*,*"
-                          BindableLayout.ItemsSource="{Binding Eventos}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate>
-                                <!-- El Border es la raíz de la plantilla, por eso puede llevar
-                                     Grid.Row / Grid.Column enlazados a las propiedades del evento.
-                                     TODO COMMAND (opcional): VerDetalleEventoCommand
-                                     Se añadiría con un TapGestureRecognizer dentro de Border.GestureRecognizers. -->
-                                <Border Style="{StaticResource Evento}"
-                                        Grid.Row="{Binding Fila}" Grid.RowSpan="{Binding Filas}"
-                                        Grid.Column="{Binding Columna}" Grid.ColumnSpan="{Binding Columnas}">
-                                    <VerticalStackLayout Spacing="2">
-                                        <Label Text="{Binding Nombre}" Style="{StaticResource EventoTexto}" />
-                                        <Label Text="{Binding Detalle}" Style="{StaticResource EventoTexto}"
-                                               FontAttributes="None" FontSize="12" />
+            <!-- Franjas -->
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="14" MaximumWidthRequest="700" HorizontalOptions="Start"
+                                     BindableLayout.ItemsSource="{Binding Franjas}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Tarjeta}" Padding="16">
+                                <VerticalStackLayout Spacing="10">
+                                    <Label Text="{Binding Hora}" FontSize="16" FontAttributes="Bold" />
+                                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Talleres}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Style="{StaticResource Evento}">
+                                                    <VerticalStackLayout Spacing="2">
+                                                        <Label Text="{Binding Nombre}" Style="{StaticResource EventoTexto}" />
+                                                        <Label Text="{Binding Detalle}" Style="{StaticResource EventoTexto}"
+                                                               FontAttributes="None" FontSize="12" />
+                                                    </VerticalStackLayout>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
                                     </VerticalStackLayout>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </Grid>
-                </Grid>
-            </Border>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </ScrollView>
         </Grid>
         </Grid>
     </Grid>

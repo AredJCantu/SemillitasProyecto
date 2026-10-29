@@ -1,38 +1,28 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  WINDOWS · COBRANZAVIEW — Quién pagó y quién debe                     ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      Reemplaza la lista de Excel que la contadora pedía cada mes. La
-      recepcionista marca pagos y revisa vencidos.
-
-    ESTRUCTURA:
-      1) Encabezado + selector de período
-      2) Tres tarjetas de totales (Cobrado, Por cobrar, Con adeudo vencido)
-      3) Chips de filtro (Todos / Vencidos / Pendientes / Pagados) + búsqueda
-      4) Tabla de mensualidades con botón "Marcar pagado"
-
-    PROPIEDADES QUE LEE DEL BindingContext:
-      Periodos, PeriodoSeleccionado, Cobrado, PorCobrar, Vencidos,
-      Filtros (cada uno con Texto), FiltroSeleccionado, TextoBusqueda, IsBusy,
-      Pagos (cada uno: Tutor, Alumno, Talleres, Total, Estado, Tono,
-             PuedeMarcarPago (bool), FechaPago).
-      · Los montos llegan ya formateados ("$38,450"): la vista no calcula.
-      · Tono: "Verde" (pagado), "Ambar" (pendiente), "Rojo" (vencido).
-
-    COMMANDS POR AGREGAR ("TODO COMMAND"):
-      Marcar pagado (cada fila)
+    Cobranza: inscripciones con adeudo (Inscripciones.Debe) y botón para marcarlas pagadas.
+    Lee: Periodos, PeriodoSeleccionado, Cobrado, PorCobrar, AlumnosConAdeudo (montos ya formateados),
+         Filtros[Texto], FiltroSeleccionado, TextoBusqueda, IsBusy,
+         Cobros[Tutor, Alumno, Taller, Costo, Estado, Tono, PuedeMarcarPago]
+    Estado = Debe | Al corriente; Tono = Rojo | Verde
+    Commands: MarcarPagadoCommand (fila)
 -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
              x:Class="SemillitasMobileApp.Views.WindowsViews.CobranzaView"
              Title="Cobranza">
 
+    <ContentPage.BindingContext>
+        <vm:CobranzaViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
+
     <ContentPage.Resources>
-        <!-- Colores y estilos: mismos que MainView (ver explicación allá). -->
         <Color x:Key="Fondo">#F7F5EF</Color>
         <Color x:Key="Blanco">#FFFFFF</Color>
         <Color x:Key="Tinta">#1F2A24</Color>
@@ -40,11 +30,8 @@
         <Color x:Key="Linea">#E2DED2</Color>
         <Color x:Key="BordeCampo">#CFCABB</Color>
         <Color x:Key="Primario">#2A6F4F</Color>
-        <Color x:Key="PrimarioOscuro">#1F3A2E</Color>
         <Color x:Key="VerdeFondo">#DDEFE4</Color>
         <Color x:Key="VerdeTexto">#1E5A3D</Color>
-        <Color x:Key="AmbarFondo">#FBEBC4</Color>
-        <Color x:Key="AmbarTexto">#7A4B00</Color>
         <Color x:Key="RojoFondo">#F6D9D2</Color>
         <Color x:Key="RojoTexto">#8E2A17</Color>
         <Color x:Key="RojoBarra">#B23A24</Color>
@@ -62,7 +49,6 @@
         <Style x:Key="Titulo" TargetType="Label">
             <Setter Property="FontSize" Value="28" />
             <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
         </Style>
         <Style x:Key="Subtitulo" TargetType="Label">
             <Setter Property="FontSize" Value="15" />
@@ -71,7 +57,6 @@
         <Style x:Key="Etiqueta" TargetType="Label">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontAttributes" Value="Bold" />
-            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
         </Style>
         <Style x:Key="Nota" TargetType="Label">
             <Setter Property="FontSize" Value="13" />
@@ -113,8 +98,8 @@
             <Setter Property="TextColor" Value="White" />
             <Setter Property="FontAttributes" Value="Bold" />
             <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="HeightRequest" Value="44" />
-            <Setter Property="Padding" Value="18,0" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="14,0" />
         </Style>
 
         <Style x:Key="BadgeBorder" TargetType="Border">
@@ -126,9 +111,6 @@
             <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
             <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="15" /></Setter.Value></Setter>
             <Style.Triggers>
-                <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Ambar">
-                    <Setter Property="BackgroundColor" Value="{StaticResource AmbarFondo}" />
-                </DataTrigger>
                 <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Rojo">
                     <Setter Property="BackgroundColor" Value="{StaticResource RojoFondo}" />
                 </DataTrigger>
@@ -140,9 +122,6 @@
             <Setter Property="VerticalOptions" Value="Center" />
             <Setter Property="TextColor" Value="{StaticResource VerdeTexto}" />
             <Style.Triggers>
-                <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Ambar">
-                    <Setter Property="TextColor" Value="{StaticResource AmbarTexto}" />
-                </DataTrigger>
                 <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Rojo">
                     <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
                 </DataTrigger>
@@ -150,26 +129,26 @@
         </Style>
     </ContentPage.Resources>
 
-    <!-- Barra lateral a la izquierda (232) + contenido de la página a la derecha (*) -->
+    <!-- Menú (232) + contenido -->
     <Grid ColumnDefinitions="232,*">
         <wViews:MenuLateral Activo="Cobranza" />
         <Grid Grid.Column="1">
         <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16" Padding="32,24"
               BackgroundColor="{StaticResource Fondo}">
 
-            <!-- ═══════════ 1 · ENCABEZADO ═══════════ -->
+            <!-- Encabezado -->
             <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="16">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Cobranza" Style="{StaticResource Titulo}" />
-                    <Label Text="Quién ha pagado y quién debe en el período seleccionado."
+                    <Label Text="Inscripciones con adeudo y al corriente del período seleccionado."
                            Style="{StaticResource Subtitulo}" />
                 </VerticalStackLayout>
                 <Picker Grid.Column="1" ItemsSource="{Binding Periodos}"
                         SelectedItem="{Binding PeriodoSeleccionado}"
-                        Title="Período" WidthRequest="170" VerticalOptions="End" />
+                        Title="Período" WidthRequest="190" VerticalOptions="End" />
             </Grid>
 
-            <!-- ═══════════ 2 · TOTALES (3 tarjetas iguales) ═══════════ -->
+            <!-- Totales (3 tarjetas iguales) -->
             <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="16">
                 <Border Style="{StaticResource Tarjeta}" Padding="20,16">
                     <VerticalStackLayout Spacing="4">
@@ -178,26 +157,23 @@
                                TextColor="{StaticResource VerdeTexto}" />
                     </VerticalStackLayout>
                 </Border>
-                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="20,16">
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="Por cobrar" Style="{StaticResource Etiqueta}" TextColor="{StaticResource TintaSuave}" />
-                        <Label Text="{Binding PorCobrar}" FontSize="30" FontAttributes="Bold"
-                               TextColor="{StaticResource AmbarTexto}" />
-                    </VerticalStackLayout>
-                </Border>
-                <!-- Tarjeta roja: llama la atención de la directora -->
-                <Border Grid.Column="2" Style="{StaticResource Tarjeta}" Padding="20,16"
+                <Border Grid.Column="1" Style="{StaticResource Tarjeta}" Padding="20,16"
                         BackgroundColor="{StaticResource RojoFondo}" Stroke="{StaticResource RojoBarra}">
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="Con adeudo vencido" Style="{StaticResource Etiqueta}"
+                        <Label Text="Por cobrar" Style="{StaticResource Etiqueta}" TextColor="{StaticResource RojoTexto}" />
+                        <Label Text="{Binding PorCobrar}" FontSize="30" FontAttributes="Bold"
                                TextColor="{StaticResource RojoTexto}" />
-                        <Label Text="{Binding Vencidos}" FontSize="30" FontAttributes="Bold"
-                               TextColor="{StaticResource RojoTexto}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Tarjeta}" Padding="20,16">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Alumnos con adeudo" Style="{StaticResource Etiqueta}" TextColor="{StaticResource TintaSuave}" />
+                        <Label Text="{Binding AlumnosConAdeudo}" FontSize="30" FontAttributes="Bold" />
                     </VerticalStackLayout>
                 </Border>
             </Grid>
 
-            <!-- ═══════════ 3 · FILTROS ═══════════ -->
+            <!-- Filtros -->
             <Grid Grid.Row="2" ColumnDefinitions="*,300" ColumnSpacing="16">
                 <CollectionView ItemsSource="{Binding Filtros}" SelectionMode="Single"
                                 SelectedItem="{Binding FiltroSeleccionado}" HeightRequest="52">
@@ -213,65 +189,46 @@
                     </CollectionView.ItemTemplate>
                 </CollectionView>
 
-                <SearchBar Grid.Column="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar tutor o alumno"
+                <SearchBar Grid.Column="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar tutor, alumno o taller"
                            VerticalOptions="Start" />
             </Grid>
 
-            <!-- ═══════════ 4 · TABLA DE PAGOS ═══════════
-                 Encabezado y filas comparten las mismas columnas:
-                 "1.6*,1.4*,1.8*,90,120,156". Si cambias una, cambia la otra. -->
+            <!-- Tabla -->
             <Border Grid.Row="3" Style="{StaticResource Tarjeta}" Padding="0">
                 <Grid RowDefinitions="Auto,*">
 
-                    <Grid ColumnDefinitions="1.6*,1.4*,1.8*,90,120,156" ColumnSpacing="16"
+                    <Grid ColumnDefinitions="1.4*,1.3*,1.6*,90,130,156" ColumnSpacing="16"
                           Padding="20,0" HeightRequest="40" BackgroundColor="{StaticResource Fondo}">
                         <Label Text="TUTOR" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                         <Label Grid.Column="1" Text="ALUMNO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="2" Text="TALLERES" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
-                        <Label Grid.Column="3" Text="TOTAL" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="2" Text="TALLER" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
+                        <Label Grid.Column="3" Text="COSTO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                         <Label Grid.Column="4" Text="ESTADO" Style="{StaticResource Nota}" FontAttributes="Bold" VerticalOptions="Center" />
                     </Grid>
 
-                    <CollectionView Grid.Row="1" ItemsSource="{Binding Pagos}" SelectionMode="None">
+                    <CollectionView Grid.Row="1" ItemsSource="{Binding Cobros}" SelectionMode="None">
                         <CollectionView.EmptyView>
-                            <Label Text="No hay pagos con estos filtros." Style="{StaticResource Subtitulo}"
+                            <Label Text="No hay inscripciones con estos filtros." Style="{StaticResource Subtitulo}"
                                    HorizontalOptions="Center" Margin="0,40" />
                         </CollectionView.EmptyView>
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate>
-                                <Grid ColumnDefinitions="1.6*,1.4*,1.8*,90,120,156" ColumnSpacing="16"
-                                      Padding="20,0" HeightRequest="62">
+                                <Grid ColumnDefinitions="1.4*,1.3*,1.6*,90,130,156" ColumnSpacing="16"
+                                      Padding="20,0" HeightRequest="60">
 
-                                    <Label Text="{Binding Tutor}" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Text="{Binding Tutor}" FontAttributes="Bold" VerticalOptions="Center" />
                                     <Label Grid.Column="1" Text="{Binding Alumno}" VerticalOptions="Center" />
-                                    <Label Grid.Column="2" Text="{Binding Talleres}" Style="{StaticResource Nota}" VerticalOptions="Center" />
-                                    <Label Grid.Column="3" Text="{Binding Total}" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding Taller}" Style="{StaticResource Nota}" VerticalOptions="Center" />
+                                    <Label Grid.Column="3" Text="{Binding Costo}" FontAttributes="Bold" VerticalOptions="Center" />
 
                                     <Border Grid.Column="4" Style="{StaticResource BadgeBorder}">
                                         <Label Text="{Binding Estado}" Style="{StaticResource BadgeTexto}" />
                                     </Border>
 
-                                    <!-- TODO COMMAND: MarcarPagadoCommand
-                                         Qué hace: registra el pago en la API y refresca la fila
-                                         (Estado → "Pagado", Tono → "Verde", PuedeMarcarPago → false).
-                                         Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                           Path=BindingContext.MarcarPagadoCommand}"
-                                         CommandParameter="{Binding .}"
-                                         Sugerencia: confirmar antes de enviar. -->
                                     <Button Grid.Column="5" Text="Marcar pagado" Style="{StaticResource BotonPrimario}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.MarcarPagadoCommand}" CommandParameter="{Binding .}"
                                             VerticalOptions="Center" IsVisible="{Binding PuedeMarcarPago}" />
-
-                                    <!-- Si ya pagó, en lugar del botón se lee la fecha. -->
-                                    <Label Grid.Column="5" Text="{Binding FechaPago}" FontAttributes="Bold"
-                                           TextColor="{StaticResource VerdeTexto}" VerticalOptions="Center"
-                                           HorizontalTextAlignment="Center">
-                                        <Label.Triggers>
-                                            <DataTrigger TargetType="Label" Binding="{Binding PuedeMarcarPago}" Value="True">
-                                                <Setter Property="IsVisible" Value="False" />
-                                            </DataTrigger>
-                                        </Label.Triggers>
-                                    </Label>
 
                                     <BoxView Grid.ColumnSpan="6" HeightRequest="1" Color="{StaticResource Linea}"
                                              VerticalOptions="End" Margin="-20,0" />

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Detalle de un taller y sus inscritos. Pantalla secundaria (sin menú), se abre desde Talleres.
+    Lee: Nombre, Categoria, Instructor, Horario, Periodo, Costo, Ocupacion ("9/15"),
+         Inscritos[NombreCompleto, Tutor, Telefono, Estado, Tono]
+    Commands: VolverCommand, EditarTallerCommand
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SemillitasMobileApp.Views.WindowsViews.TallerDetalleView"
+             Title="Detalle del taller">
+
+    <ContentPage.BindingContext>
+        <vm:TallerDetalleViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.Resources>
+        <Color x:Key="Fondo">#F7F5EF</Color>
+        <Color x:Key="Blanco">#FFFFFF</Color>
+        <Color x:Key="Tinta">#1F2A24</Color>
+        <Color x:Key="TintaSuave">#5A655E</Color>
+        <Color x:Key="Linea">#E2DED2</Color>
+        <Color x:Key="BordeCampo">#CFCABB</Color>
+        <Color x:Key="Primario">#2A6F4F</Color>
+        <Color x:Key="VerdeFondo">#DDEFE4</Color>
+        <Color x:Key="VerdeTexto">#1E5A3D</Color>
+        <Color x:Key="RojoFondo">#F6D9D2</Color>
+        <Color x:Key="RojoTexto">#8E2A17</Color>
+
+        <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
+        <Style x:Key="Titulo" TargetType="Label">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Seccion" TargetType="Label">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Nota" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource Linea}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Padding" Value="20" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="BotonPrimario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Primario}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="14,0" />
+        </Style>
+        <Style x:Key="BotonSecundario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="BorderColor" Value="{StaticResource BordeCampo}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="14,0" />
+        </Style>
+        <Style x:Key="BadgeBorder" TargetType="Border">
+            <Setter Property="HeightRequest" Value="30" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="HorizontalOptions" Value="Start" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="15" /></Setter.Value></Setter>
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="BackgroundColor" Value="{StaticResource RojoFondo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="BadgeTexto" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="TextColor" Value="{StaticResource VerdeTexto}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView BackgroundColor="{StaticResource Fondo}">
+        <VerticalStackLayout Spacing="16" Padding="32,24" MaximumWidthRequest="1000" HorizontalOptions="Start">
+
+            <!-- Volver + nombre -->
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                <Button Text="← Volver a talleres" Style="{StaticResource BotonSecundario}"
+                        Command="{Binding VolverCommand}" />
+                <Button Grid.Column="2" Text="Editar taller" Style="{StaticResource BotonSecundario}"
+                        Command="{Binding EditarTallerCommand}" />
+            </Grid>
+            <Label Text="{Binding Nombre}" Style="{StaticResource Titulo}" />
+
+            <!-- Datos -->
+            <Border Style="{StaticResource Tarjeta}">
+                <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="CATEGORÍA" Style="{StaticResource Nota}" FontAttributes="Bold" />
+                        <Label Text="{Binding Categoria}" FontSize="16" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label Text="INSTRUCTOR" Style="{StaticResource Nota}" FontAttributes="Bold" />
+                        <Label Text="{Binding Instructor}" FontSize="16" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="2" Spacing="2">
+                        <Label Text="HORARIO" Style="{StaticResource Nota}" FontAttributes="Bold" />
+                        <Label Text="{Binding Horario}" FontSize="16" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="3" Spacing="2">
+                        <Label Text="PERÍODO" Style="{StaticResource Nota}" FontAttributes="Bold" />
+                        <Label Text="{Binding Periodo}" FontSize="16" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Row="1" Spacing="2">
+                        <Label Text="COSTO" Style="{StaticResource Nota}" FontAttributes="Bold" />
+                        <Label Text="{Binding Costo}" FontSize="16" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="2">
+                        <Label Text="CUPO" Style="{StaticResource Nota}" FontAttributes="Bold" />
+                        <Label Text="{Binding Ocupacion}" FontSize="16" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Inscritos -->
+            <Border Style="{StaticResource Tarjeta}" Padding="0">
+                <VerticalStackLayout>
+                    <Label Text="Alumnos inscritos" Style="{StaticResource Seccion}" Padding="20,16" />
+                    <BoxView HeightRequest="1" Color="{StaticResource Linea}" />
+
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding Inscritos}">
+                        <BindableLayout.EmptyView>
+                            <Label Text="Aún no hay alumnos inscritos." Style="{StaticResource Nota}" Padding="20,16" />
+                        </BindableLayout.EmptyView>
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="2*,1.6*,1.3*,130" ColumnSpacing="16" Padding="20,0" HeightRequest="56">
+                                    <Label Text="{Binding NombreCompleto}" FontSize="16" FontAttributes="Bold" VerticalOptions="Center" />
+                                    <Label Grid.Column="1" Text="{Binding Tutor}" VerticalOptions="Center" />
+                                    <Label Grid.Column="2" Text="{Binding Telefono}" Style="{StaticResource Nota}" VerticalOptions="Center" />
+                                    <Border Grid.Column="3" Style="{StaticResource BadgeBorder}">
+                                        <Label Text="{Binding Estado}" Style="{StaticResource BadgeTexto}" />
+                                    </Border>
+                                    <BoxView Grid.ColumnSpan="4" HeightRequest="1" Color="{StaticResource Linea}"
+                                             VerticalOptions="End" Margin="-20,0" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

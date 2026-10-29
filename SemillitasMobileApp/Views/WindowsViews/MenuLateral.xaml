@@ -1,30 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-    ╔══════════════════════════════════════════════════════════════════════╗
-    ║  WINDOWS · MENULATERAL — Barra lateral verde de la app                ║
-    ╚══════════════════════════════════════════════════════════════════════╝
-
-    PARA QUÉ SIRVE:
-      Es el menú que viste en el mockup (Semillitas, Disponibilidad, Inscribir,
-      Cobranza, Agenda, Catálogos, Reportes y el usuario abajo). Se escribe una
-      sola vez y cada vista de Windows la incluye con:
-          <wViews:MenuLateral Activo="Cobranza" />
-      "Activo" resalta la opción de la página actual.
-
-    NOTA: es un ContentView (un pedazo de pantalla), no una página.
-
-    TODO COMMAND: navegación. Cada opción debe llevar a su vista
-      (Shell.Current.GoToAsync o el mecanismo que decida el equipo).
-      Se añade con un TapGestureRecognizer + Command en cada Border de opción.
-
-    PROPIEDADES QUE LEE DEL BindingContext: ninguna (texto fijo).
-      Si el nombre y rol del usuario deben venir de la sesión, enlázalos a
-      NombreUsuario y RolUsuario (hoy van fijos: "Rocío" / "Recepción").
+    Menú lateral de Windows. Cada vista lo incluye con <wViews:MenuLateral Activo="Cobranza" />.
+    Cada opción ejecuta NavegarCommand con la ruta de AppShell como parámetro.
+    Usuario y rol van fijos ("Rocío" / "Recepción") hasta tener sesión.
 -->
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
              x:Class="SemillitasMobileApp.Views.WindowsViews.MenuLateral"
              x:Name="Menu">
+
+    <!-- ViewModel del menú, creado desde el XAML -->
+    <ContentView.BindingContext>
+        <vm:MenuLateralViewModel />
+    </ContentView.BindingContext>
 
     <ContentView.Resources>
         <Color x:Key="PrimarioOscuro">#1F3A2E</Color>
@@ -32,13 +21,17 @@
         <Color x:Key="TextoClaro">#E8EFE9</Color>
         <Color x:Key="TextoApagado">#9DB5A6</Color>
 
-        <!-- Opción del menú: se ilumina cuando Activo coincide con su nombre -->
+        <!-- Opción del menú (se ilumina si Activo coincide) -->
         <Style x:Key="Opcion" TargetType="Border">
             <Setter Property="BackgroundColor" Value="Transparent" />
             <Setter Property="StrokeThickness" Value="0" />
             <Setter Property="HeightRequest" Value="44" />
             <Setter Property="Padding" Value="14,0" />
-            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="10" /></Setter.Value></Setter>
+            <Setter Property="StrokeShape">
+                <Setter.Value>
+                    <RoundRectangle CornerRadius="10" />
+                </Setter.Value>
+            </Setter>
         </Style>
         <Style x:Key="OpcionTexto" TargetType="Label">
             <Setter Property="TextColor" Value="{StaticResource TextoClaro}" />
@@ -65,6 +58,10 @@
                         <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
                     </DataTrigger>
                 </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="MainView" />
+                </Border.GestureRecognizers>
                 <Label Text="Disponibilidad" Style="{StaticResource OpcionTexto}" />
             </Border>
 
@@ -74,6 +71,10 @@
                         <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
                     </DataTrigger>
                 </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="InscripcionView" />
+                </Border.GestureRecognizers>
                 <Label Text="Inscribir" Style="{StaticResource OpcionTexto}" />
             </Border>
 
@@ -83,6 +84,10 @@
                         <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
                     </DataTrigger>
                 </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="CobranzaView" />
+                </Border.GestureRecognizers>
                 <Label Text="Cobranza" Style="{StaticResource OpcionTexto}" />
             </Border>
 
@@ -92,26 +97,52 @@
                         <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
                     </DataTrigger>
                 </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="AgendaView" />
+                </Border.GestureRecognizers>
                 <Label Text="Agenda" Style="{StaticResource OpcionTexto}" />
             </Border>
 
             <Border Style="{StaticResource Opcion}">
                 <Border.Triggers>
-                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Catalogos">
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Alumnos">
                         <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
                     </DataTrigger>
                 </Border.Triggers>
-                <Label Text="Catálogos" Style="{StaticResource OpcionTexto}" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="AlumnosView" />
+                </Border.GestureRecognizers>
+                <Label Text="Alumnos" Style="{StaticResource OpcionTexto}" />
             </Border>
 
             <Border Style="{StaticResource Opcion}">
                 <Border.Triggers>
-                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Reportes">
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Talleres">
                         <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
                     </DataTrigger>
                 </Border.Triggers>
-                <Label Text="Reportes" Style="{StaticResource OpcionTexto}" />
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="TalleresView" />
+                </Border.GestureRecognizers>
+                <Label Text="Talleres" Style="{StaticResource OpcionTexto}" />
             </Border>
+
+            <Border Style="{StaticResource Opcion}">
+                <Border.Triggers>
+                    <DataTrigger TargetType="Border" Binding="{Binding Source={x:Reference Menu}, Path=Activo}" Value="Periodos">
+                        <Setter Property="BackgroundColor" Value="{StaticResource ItemActivo}" />
+                    </DataTrigger>
+                </Border.Triggers>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding NavegarCommand}"
+                                          CommandParameter="PeriodosView" />
+                </Border.GestureRecognizers>
+                <Label Text="Períodos" Style="{StaticResource OpcionTexto}" />
+            </Border>
+
         </VerticalStackLayout>
 
         <!-- Usuario -->

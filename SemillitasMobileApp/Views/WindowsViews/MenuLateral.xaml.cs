@@ -1,11 +1,8 @@
 namespace SemillitasMobileApp.Views.WindowsViews;
 
-/// <summary>
-/// Barra lateral reutilizable. Única "lógica": la propiedad Activo, que
-/// permite a cada página decir cuál opción debe verse resaltada.
-/// </summary>
 public partial class MenuLateral : ContentView
 {
+    // Opción resaltada: "Disponibilidad", "Inscribir", "Cobranza", "Agenda", "Alumnos" o "Talleres"
     public static readonly BindableProperty ActivoProperty =
         BindableProperty.Create(nameof(Activo), typeof(string), typeof(MenuLateral), string.Empty);
 

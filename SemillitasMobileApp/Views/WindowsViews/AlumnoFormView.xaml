@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Crear / editar alumno (mismo formulario; Titulo cambia según EsEdicion).
+    Lee (TwoWay): Titulo, NombreAlumno, ApellidoAlumno, NombreTutor, ApellidoTutor, Telefono, IsBusy,
+         TieneErrorNombre/ErrorNombre, TieneErrorTelefono/ErrorTelefono
+    Los mensajes de error vienen de los validators de la API.
+    Commands: CancelarCommand, GuardarCommand
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.Viewmodels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:wViews="clr-namespace:SemillitasMobileApp.Views.WindowsViews"
+             x:Class="SemillitasMobileApp.Views.WindowsViews.AlumnoFormView"
+             Title="Alumno">
+
+    <ContentPage.BindingContext>
+        <vm:AlumnoFormViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <Color x:Key="Fondo">#F7F5EF</Color>
+        <Color x:Key="Blanco">#FFFFFF</Color>
+        <Color x:Key="Tinta">#1F2A24</Color>
+        <Color x:Key="TintaSuave">#5A655E</Color>
+        <Color x:Key="Linea">#E2DED2</Color>
+        <Color x:Key="BordeCampo">#CFCABB</Color>
+        <Color x:Key="Primario">#2A6F4F</Color>
+        <Color x:Key="RojoTexto">#8E2A17</Color>
+
+        <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
+        <Style TargetType="Entry">
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="HeightRequest" Value="44" />
+        </Style>
+        <Style TargetType="Picker">
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="HeightRequest" Value="44" />
+        </Style>
+
+        <Style x:Key="Titulo" TargetType="Label">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Etiqueta" TargetType="Label">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Error" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+        </Style>
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource Linea}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Padding" Value="24" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="BotonPrimario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Primario}" />
+            <Setter Property="TextColor" Value="White" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="46" />
+            <Setter Property="Padding" Value="24,0" />
+        </Style>
+        <Style x:Key="BotonSecundario" TargetType="Button">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="BorderColor" Value="{StaticResource BordeCampo}" />
+            <Setter Property="BorderWidth" Value="1" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="CornerRadius" Value="10" />
+            <Setter Property="HeightRequest" Value="46" />
+            <Setter Property="Padding" Value="24,0" />
+        </Style>
+    </ContentPage.Resources>
+
+    <!-- Menú (232) + contenido -->
+    <Grid ColumnDefinitions="232,*">
+        <wViews:MenuLateral Activo="Alumnos" />
+        <Grid Grid.Column="1">
+        <ScrollView BackgroundColor="{StaticResource Fondo}">
+            <VerticalStackLayout Spacing="20" Padding="32,24" MaximumWidthRequest="900" HorizontalOptions="Start">
+
+                <!-- Encabezado -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Text="{Binding Titulo}" Style="{StaticResource Titulo}" />
+                    <Button Grid.Column="1" Text="Cancelar" Style="{StaticResource BotonSecundario}"
+                            Command="{Binding CancelarCommand}" />
+                </Grid>
+
+                <!-- Formulario -->
+                <Border Style="{StaticResource Tarjeta}">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="24" RowSpacing="18"
+                          RowDefinitions="Auto,Auto,Auto">
+
+                        <VerticalStackLayout Spacing="6">
+                            <Label Text="Nombre del alumno" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding NombreAlumno}" />
+                            <Label Text="{Binding ErrorNombre}" Style="{StaticResource Error}"
+                                   IsVisible="{Binding TieneErrorNombre}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" Spacing="6">
+                            <Label Text="Apellidos del alumno" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding ApellidoAlumno}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="1" Spacing="6">
+                            <Label Text="Nombre del tutor" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding NombreTutor}" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Row="1" Grid.Column="1" Spacing="6">
+                            <Label Text="Apellidos del tutor" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding ApellidoTutor}" />
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Row="2" Spacing="6">
+                            <Label Text="Teléfono" Style="{StaticResource Etiqueta}" />
+                            <Entry Text="{Binding Telefono}" Keyboard="Telephone" />
+                            <Label Text="{Binding ErrorTelefono}" Style="{StaticResource Error}"
+                                   IsVisible="{Binding TieneErrorTelefono}" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+
+                <!-- Acciones -->
+                <HorizontalStackLayout HorizontalOptions="End" Spacing="12">
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                                       Color="{StaticResource Primario}" VerticalOptions="Center" />
+                    <Button Text="Guardar alumno" Style="{StaticResource BotonPrimario}"
+                            Command="{Binding GuardarCommand}" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        </Grid>
+    </Grid>
+</ContentPage>

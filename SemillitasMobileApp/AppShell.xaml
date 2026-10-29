@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    Windows: una sección por opción del MenuLateral (el menú está dibujado en cada vista).
+    Android: barra de pestañas inferior. IsVisible con OnPlatform muestra solo el grupo de cada plataforma.
+    Las pantallas que se abren encima (formularios, detalle) se registran en AppShell.xaml.cs.
+-->
 <Shell
     x:Class="SemillitasMobileApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -10,7 +15,7 @@
     Shell.NavBarIsVisible="False"
     Title="SemillitasMobileApp">
 
-    <!-- WINDOWS: una sección por opción del MenuLateral -->
+    <!-- Windows -->
     <ShellContent
         Title="Disponibilidad"
         IsVisible="{OnPlatform WinUI=True, Default=False}"
@@ -36,12 +41,24 @@
         Route="AgendaView" />
 
     <ShellContent
-        Title="Catálogos"
+        Title="Alumnos"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:AlumnosView}"
+        Route="AlumnosView" />
+
+    <ShellContent
+        Title="Talleres"
         IsVisible="{OnPlatform WinUI=True, Default=False}"
         ContentTemplate="{DataTemplate wViews:TalleresView}"
         Route="TalleresView" />
 
-    <!-- ANDROID: barra de pestañas inferior -->
+    <ShellContent
+        Title="Períodos"
+        IsVisible="{OnPlatform WinUI=True, Default=False}"
+        ContentTemplate="{DataTemplate wViews:PeriodosView}"
+        Route="PeriodosView" />
+
+    <!-- Android -->
     <TabBar IsVisible="{OnPlatform Android=True, Default=False}">
         <ShellContent
             Title="Disponibilidad"
@@ -52,6 +69,16 @@
             Title="Cobranza"
             ContentTemplate="{DataTemplate aViews:CobranzaView}"
             Route="AndroidCobranzaView" />
+
+        <ShellContent
+            Title="Agenda"
+            ContentTemplate="{DataTemplate aViews:AgendaView}"
+            Route="AndroidAgendaView" />
+
+        <ShellContent
+            Title="Alumnos"
+            ContentTemplate="{DataTemplate aViews:AlumnosView}"
+            Route="AndroidAlumnosView" />
     </TabBar>
 
 </Shell>
