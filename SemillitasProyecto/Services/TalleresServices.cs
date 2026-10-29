@@ -19,6 +19,7 @@ namespace SemillitasProyecto.Services
         public IEnumerable<TallerDTO> GetAll()
         {
             var data = Repository.Query().Include(x=>x.Inscripciones).Select(t => t.ToDTO());
+            Console.WriteLine("Prueba");
             return data;
         }
 

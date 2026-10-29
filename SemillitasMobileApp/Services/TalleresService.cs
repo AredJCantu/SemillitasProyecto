@@ -14,10 +14,10 @@ public class TalleresService
     public TalleresService()
     {
         var handler = new HttpClientHandler();
-#if DEBUG
-        // Solo en desarrollo: acepta el certificado de prueba (el emulador no lo reconoce)
-        handler.ServerCertificateCustomValidationCallback = (mensaje, certificado, cadena, errores) => true;
-#endif
+//#if DEBUG
+//        // Solo en desarrollo: acepta el certificado de prueba (el emulador no lo reconoce)
+//        handler.ServerCertificateCustomValidationCallback = (mensaje, certificado, cadena, errores) => true;
+//#endif
         // El emulador de Android ve la PC como 10.0.2.2 en lugar de localhost
         var direccion = DeviceInfo.Platform == DevicePlatform.Android ? "https://10.0.2.2:44391/" : "https://localhost:44391/";
         cliente = new(handler) { BaseAddress = new Uri(direccion) };
@@ -26,6 +26,7 @@ public class TalleresService
     public async Task<List<TallerDTO>> GetAll()
     {
         var data = await cliente.GetFromJsonAsync<List<TallerDTO>>("api/talleres");
+        Console.Write(data);
         return data ?? [];
     }
 

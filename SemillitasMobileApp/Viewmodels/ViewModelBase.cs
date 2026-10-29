@@ -37,9 +37,9 @@ public abstract class ViewModelBase : INotifyPropertyChanged
             IsBusy = true;
             await accion();
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            await Avisar("Sin conexión", "No se pudo comunicar con el servidor.");
+            await Avisar("Sin conexión", ex.Message);
         }
         catch (TaskCanceledException)
         {
