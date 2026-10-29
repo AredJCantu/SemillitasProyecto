@@ -39,14 +39,16 @@ namespace SemillasCore.DTOs
         public string Horario { get; set; } = "";
         public int Cupo { get; set; }
         public int CantidadAlumnos { get; set; }
+
+        // CAMBIO (cliente): campos nuevos que las vistas necesitan. Solo se agregaron, no se quitó nada.
         public decimal Costo { get; set; }
         public int IdPeriodo { get; set; }
         public int HoraInicio { get; set; }
         public int HoraFin { get; set; }
         public int HoraInicioSabado { get; set; }
         public int HoraFinSabado { get; set; }
-        public Categorias Categoria { get; set; }          
-        public string NombreInstructor { get; set; } = ""; 
+        public Categorias Categoria { get; set; }          // solo se usa en el formulario de taller
+        public string NombreInstructor { get; set; } = ""; // no se muestra; el formulario lo reenvía al editar
     }
     public class EditTallerDTO:CreateTallerDTO
     {

@@ -72,13 +72,13 @@ public class TallerDetalleViewModel : ViewModelBase, IQueryAttributable
         if (_taller is null) return;
 
         // Se vuelve a pedir el taller por si se editó
-        var actual = (await _talleres.ObtenerAsync()).FirstOrDefault(t => t.Id == _taller.Id);
+        var actual = (await _talleres.GetAll()).FirstOrDefault(t => t.Id == _taller.Id);
         if (actual is not null) { _taller = actual; Mostrar(actual); }
 
-        Periodo = (await _periodos.ObtenerAsync()).FirstOrDefault(p => p.Id == _taller.IdPeriodo)?.ToString() ?? "";
+        Periodo = (await _periodos.GetAll()).FirstOrDefault(p => p.Id == _taller.IdPeriodo)?.ToString() ?? "";
 
-        var alumnos = await _alumnos.ObtenerAsync();
-        var suyas = (await _inscripciones.ObtenerAsync()).Where(i => i.IdTaller == _taller.Id).ToList();
+        var alumnos = await _alumnos.GetAll();
+        var suyas = (await _inscripciones.GetAll()).Where(i => i.IdTaller == _taller.Id).ToList();
 
         Inscritos = (from i in suyas
                      join a in alumnos on i.IdAlumno equals a.Id

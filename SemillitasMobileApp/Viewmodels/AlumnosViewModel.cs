@@ -1,4 +1,5 @@
 using SemillasCore.DTOs;
+using SemillasCore.Validators;
 using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
 using SemillitasMobileApp.Services;
@@ -44,8 +45,8 @@ public class AlumnosViewModel : ViewModelBase
 
     private async Task Cargar()
     {
-        _todos = await _alumnos.ObtenerAsync();
-        _inscripcionesTodas = await _inscripciones.ObtenerAsync();
+        _todos = await _alumnos.GetAll();
+        _inscripcionesTodas = await _inscripciones.GetAll();
         Filtrar();
     }
 
@@ -82,7 +83,12 @@ public class AlumnosViewModel : ViewModelBase
 
         await Ejecutar(async () =>
         {
-            await _alumnos.EliminarAsync(fila.Alumno.Id);
+            var errores = new ValidatorClass();
+            if (!await _alumnos.Delete(fila.Alumno.Id, errores))
+            {
+                await Avisar("No se pudo eliminar", string.Join("\n", errores.Errores));
+                return;
+            }
             _todos.Remove(fila.Alumno);
             Filtrar();
         });

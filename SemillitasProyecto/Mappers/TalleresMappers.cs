@@ -14,37 +14,54 @@ namespace SemillitasProyecto.Mappers
                 Horario = $"{entity.HoraInicio}-{entity.HoraFin}",
                 Cupo = entity.Cupo,
                 CantidadAlumnos = entity.Inscripciones.Count,
+                Costo = entity.Costo,
+                IdPeriodo = entity.IdPeriodo,
+                HoraInicio = entity.HoraInicio,
+                HoraFin = entity.HoraFin,
+                HoraInicioSabado = entity.HoraInicioSabado,
+                HoraFinSabado = entity.HoraFinSabado,
+                Categoria = ToCategoria(entity.Categoria),
+                NombreInstructor = entity.NombreInstructor
             };
             return taller;
         }
-        public static Talleres ToEntity(this CreateTallerDTO dto) {
-            Talleres taller = new() {
-                Nombre= dto.Nombre,
-                Costo= dto.Costo,
-                HoraInicio= dto.HoraInicio,
-                HoraFin= dto.HoraFin,
+
+
+        private static Categorias ToCategoria(string texto) =>
+             texto == "arte" ? Categorias.arte : texto == "deportes" ? Categorias.deportes : Categorias.tecnología;
+        public static Talleres ToEntity(this CreateTallerDTO dto)
+        {
+            Talleres taller = new()
+            {
+                Nombre = dto.Nombre,
+                Costo = dto.Costo,
+                HoraInicio = dto.HoraInicio,
+                HoraFin = dto.HoraFin,
                 HoraInicioSabado = dto.HoraInicioSabado,
-                HoraFinSabado= dto.HoraFinSabado,
-                NombreInstructor= dto.NombreInstructor,
-                Categoria = dto.Categoria==Commons.Categorias.arte?"arte":dto.Categoria==Categorias.deportes?"deportes":"tecnología",
-                IdPeriodo= dto.IdPeriodo,
-                Cupo= dto.Cupo
+                HoraFinSabado = dto.HoraFinSabado,
+                NombreInstructor = dto.NombreInstructor,
+                Categoria = dto.Categoria == Commons.Categorias.arte ? "arte" : dto.Categoria == Categorias.deportes ? "deportes" : "tecnología",
+                IdPeriodo = dto.IdPeriodo,
+                Cupo = dto.Cupo
             };
             return taller;
         }
- //La entidad debe tener el include de inscripciones y las inscripciones deben tener el include de IdAlumnoNavigation
-        public static DatosTallerDTO? ToDatosTallerDTO(this Talleres entity) {
-            DatosTallerDTO taller = new() {
-                Id=entity.Id,
-                Nombre=entity.Nombre,
-                Cupo=entity.Cupo,
-                NombreInstructor=entity.NombreInstructor,
-                IdPeriodo=entity.IdPeriodo,
-                alumnos=entity.Inscripciones.Select(a=>new AlumnoDTO() {
-                    Id=a.Id,
-                    Nombre=a.IdAlumnoNavigation.Nombre,
-                    Apellido=a.IdAlumnoNavigation.Apellido,
-                    NombreTutor=a.IdAlumnoNavigation.NombreTutor,
+        //La entidad debe tener el include de inscripciones y las inscripciones deben tener el include de IdAlumnoNavigation
+        public static DatosTallerDTO? ToDatosTallerDTO(this Talleres entity)
+        {
+            DatosTallerDTO taller = new()
+            {
+                Id = entity.Id,
+                Nombre = entity.Nombre,
+                Cupo = entity.Cupo,
+                NombreInstructor = entity.NombreInstructor,
+                IdPeriodo = entity.IdPeriodo,
+                alumnos = entity.Inscripciones.Select(a => new AlumnoDTO()
+                {
+                    Id = a.Id,
+                    Nombre = a.IdAlumnoNavigation.Nombre,
+                    Apellido = a.IdAlumnoNavigation.Apellido,
+                    NombreTutor = a.IdAlumnoNavigation.NombreTutor,
                     Telefono = a.IdAlumnoNavigation.Telefono
                 })
             };

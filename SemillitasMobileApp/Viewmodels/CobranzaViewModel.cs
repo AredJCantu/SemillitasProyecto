@@ -1,4 +1,5 @@
 using SemillasCore.DTOs;
+using SemillasCore.Validators;
 using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
 using SemillitasMobileApp.Services;
@@ -69,10 +70,10 @@ public class CobranzaViewModel : ViewModelBase
 
     private async Task Cargar()
     {
-        _todosTalleres = await _talleres.ObtenerAsync();
-        _todosAlumnos = await _alumnos.ObtenerAsync();
-        _todasInscripciones = await _inscripciones.ObtenerAsync();
-        var lista = await _periodos.ObtenerAsync();
+        _todosTalleres = await _talleres.GetAll();
+        _todosAlumnos = await _alumnos.GetAll();
+        _todasInscripciones = await _inscripciones.GetAll();
+        var lista = await _periodos.GetAll();
 
         Filtros = new() { new() { Texto = "Todos" }, new() { Texto = "Deben" }, new() { Texto = "Al corriente" } };
         FiltroSeleccionado ??= Filtros[0];
@@ -127,7 +128,12 @@ public class CobranzaViewModel : ViewModelBase
 
         await Ejecutar(async () =>
         {
-            await _inscripciones.MarcarPagadaAsync(fila.Inscripcion);   // cambia Debe en el mismo objeto
+            var errores = new ValidatorClass();
+            if (!await _inscripciones.MarcarPagada(fila.Inscripcion, errores))
+            {
+                await Avisar("No se pudo marcar el pago", string.Join("\n", errores.Errores));
+                return;
+            }
             Aplicar();
         });
     }

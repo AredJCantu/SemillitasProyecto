@@ -35,8 +35,8 @@ public class AgendaViewModel : ViewModelBase
 
     private async Task Cargar()
     {
-        _todos = await _talleres.ObtenerAsync();
-        var lista = await _periodos.ObtenerAsync();
+        _todos = await _talleres.GetAll();
+        var lista = await _periodos.GetAll();
 
         var idActual = PeriodoSeleccionado?.Id;
         Periodos = lista;

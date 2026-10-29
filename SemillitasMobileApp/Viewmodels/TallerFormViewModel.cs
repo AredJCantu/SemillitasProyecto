@@ -109,7 +109,7 @@ public class TallerFormViewModel : ViewModelBase, IQueryAttributable
 
     private async Task Cargar()
     {
-        Periodos = await _periodos.ObtenerAsync();
+        Periodos = await _periodos.GetAll();
         PeriodoSeleccionado = Periodos.FirstOrDefault(p => p.Id == _taller?.IdPeriodo)
                               ?? PeriodoSeleccionado
                               ?? Periodos.OrderBy(p => p.Id).LastOrDefault();
@@ -150,7 +150,8 @@ public class TallerFormViewModel : ViewModelBase, IQueryAttributable
                 HoraInicioSabado = inicioSab, HoraFinSabado = finSab
             };
             if (!EsValido(new CreateTallerValidator().IsValid(nuevo))) return;
-            await _talleres.CrearAsync(nuevo);
+            var errores = new ValidatorClass();
+            if (await _talleres.Create(nuevo, errores) is null) { MostrarErrores(errores.Errores); return; }
         }
         else
         {
@@ -162,7 +163,8 @@ public class TallerFormViewModel : ViewModelBase, IQueryAttributable
                 HoraInicioSabado = inicioSab, HoraFinSabado = finSab
             };
             if (!EsValido(new EditTallerValidator().IsValid(edicion))) return;
-            await _talleres.ActualizarAsync(edicion);
+            var errores = new ValidatorClass();
+            if (!await _talleres.Update(edicion, errores)) { MostrarErrores(errores.Errores); return; }
         }
 
         await Regresar();
@@ -177,7 +179,8 @@ public class TallerFormViewModel : ViewModelBase, IQueryAttributable
 
         await Ejecutar(async () =>
         {
-            await _talleres.EliminarAsync(_taller.Id);
+            var errores = new ValidatorClass();
+            if (!await _talleres.Delete(_taller.Id, errores)) { MostrarErrores(errores.Errores); return; }
             await Regresar();
         });
     }

@@ -64,7 +64,8 @@ public class AlumnoFormViewModel : ViewModelBase, IQueryAttributable
                 Telefono = Telefono.Trim()
             };
             if (!EsValido(new CreateAlumnoValidator().IsValid(nuevo))) return;
-            await _alumnos.CrearAsync(nuevo);
+            var errores = new ValidatorClass();
+            if (await _alumnos.Create(nuevo, errores) is null) { MostrarErrores(errores.Errores); return; }
         }
         else
         {
@@ -77,7 +78,8 @@ public class AlumnoFormViewModel : ViewModelBase, IQueryAttributable
                 Telefono = Telefono.Trim()
             };
             if (!EsValido(new EditAlumnoValidator().IsValid(edicion))) return;
-            await _alumnos.ActualizarAsync(edicion);
+            var errores = new ValidatorClass();
+            if (!await _alumnos.Update(edicion, errores)) { MostrarErrores(errores.Errores); return; }
         }
 
         await Regresar();

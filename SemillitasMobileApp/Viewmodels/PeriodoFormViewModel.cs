@@ -61,13 +61,15 @@ public class PeriodoFormViewModel : ViewModelBase, IQueryAttributable
         {
             var nuevo = new CreatePeriodoDTO { MesInicio = inicio, MesFin = fin, Año = anio };
             if (!EsValido(new CreatePeriodoValidator().IsValid(nuevo))) return;
-            await _periodos.CrearAsync(nuevo);
+            var errores = new ValidatorClass();
+            if (await _periodos.Create(nuevo, errores) is null) { MostrarErrores(errores.Errores); return; }
         }
         else
         {
             var edicion = new EditPeriodoDTO { Id = _periodo.Id, MesInicio = inicio, MesFin = fin, Año = anio };
             if (!EsValido(new EditPeriodoValidator().IsValid(edicion))) return;
-            await _periodos.ActualizarAsync(edicion);
+            var errores = new ValidatorClass();
+            if (!await _periodos.Update(edicion, errores)) { MostrarErrores(errores.Errores); return; }
         }
 
         await Regresar();

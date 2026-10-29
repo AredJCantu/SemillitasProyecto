@@ -92,9 +92,9 @@ public class InscripcionViewModel : ViewModelBase, IQueryAttributable
 
     private async Task Cargar()
     {
-        _todosTalleres = await _talleres.ObtenerAsync();
-        _todosAlumnos = await _alumnos.ObtenerAsync();
-        var periodos = await _periodos.ObtenerAsync();
+        _todosTalleres = await _talleres.GetAll();
+        _todosAlumnos = await _alumnos.GetAll();
+        var periodos = await _periodos.GetAll();
 
         // Período: el del taller elegido, o el que ya había, o el más reciente
         var idPeriodo = _tallerInicial?.IdPeriodo ?? _periodoActual?.Id;
@@ -230,20 +230,24 @@ public class InscripcionViewModel : ViewModelBase, IQueryAttributable
 
         await Ejecutar(async () =>
         {
-            try
+            // Alumno nuevo: se crea primero para tener su Id. Alumno existente: se usa tal cual.
+            var fallos = new ValidatorClass();
+            var alumno = _alumnoExistente ?? await _alumnos.Create(datos, fallos);
+            if (alumno is null)
             {
-                // Alumno nuevo: se crea primero para tener su Id. Alumno existente: se usa tal cual.
-                var alumno = _alumnoExistente ?? await _alumnos.CrearAsync(datos)
-                    ?? throw new ApiException(new List<string> { "El servidor no devolvió el alumno creado." });
-
-                // Una inscripción por taller; Debe = true hasta que se marque el pago en Cobranza
-                foreach (var taller in _agregados.ToList())
-                    await _inscripciones.CrearAsync(new CreateInscripcionesDTO { IdAlumno = alumno.Id, IdTaller = taller.Id, Debe = true });
-            }
-            catch (ApiException ex)
-            {
-                MostrarError(string.Join("\n", ex.Errores));   // choque de horario, cupo lleno, datos inválidos...
+                MostrarError(string.Join("\n", fallos.Errores));
                 return;
+            }
+
+            // Una inscripción por taller; Debe = true hasta que se marque el pago en Cobranza
+            foreach (var taller in _agregados.ToList())
+            {
+                var nueva = new CreateInscripcionesDTO { IdAlumno = alumno.Id, IdTaller = taller.Id, Debe = true };
+                if (await _inscripciones.Create(nueva, fallos) is null)
+                {
+                    MostrarError(string.Join("\n", fallos.Errores));   // choque de horario, cupo lleno...
+                    return;
+                }
             }
 
             await Avisar("Listo", "Inscripción registrada.");

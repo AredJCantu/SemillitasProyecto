@@ -68,7 +68,9 @@ namespace SemillitasProyecto.Services
         }
         public bool Delete(int id) {
             var data = Repository.GetById(id);
-            if (data != null) {
+            if (data != null)
+            {
+                var idTaller = data.IdTaller;
                 Repository.Delete(data);
                 MoverCupo(idTaller, +1);
                 return true;

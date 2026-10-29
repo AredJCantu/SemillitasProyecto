@@ -78,8 +78,8 @@ public class DisponibilidadViewModel : ViewModelBase
 
     private async Task Cargar()
     {
-        _todos = await _talleres.ObtenerAsync();
-        var lista = await _periodos.ObtenerAsync();
+        _todos = await _talleres.GetAll();
+        var lista = await _periodos.GetAll();
 
         // Se conserva el período elegido si sigue existiendo; si no, el más reciente
         var idActual = PeriodoSeleccionado?.Id;

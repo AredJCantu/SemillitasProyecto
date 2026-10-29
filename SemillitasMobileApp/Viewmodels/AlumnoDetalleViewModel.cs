@@ -1,4 +1,5 @@
 using SemillasCore.DTOs;
+using SemillasCore.Validators;
 using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
 using SemillitasMobileApp.Services;
@@ -66,12 +67,12 @@ public class AlumnoDetalleViewModel : ViewModelBase, IQueryAttributable
         if (_alumno is null) return;
 
         // Se vuelve a pedir el alumno por si se editó en el formulario
-        var actual = (await _alumnos.ObtenerAsync()).FirstOrDefault(a => a.Id == _alumno.Id);
+        var actual = (await _alumnos.GetAll()).FirstOrDefault(a => a.Id == _alumno.Id);
         if (actual is not null) { _alumno = actual; Mostrar(actual); }
 
-        var talleres = await _talleres.ObtenerAsync();
-        var periodos = await _periodos.ObtenerAsync();
-        var suyas = (await _inscripciones.ObtenerAsync()).Where(i => i.IdAlumno == _alumno.Id).ToList();
+        var talleres = await _talleres.GetAll();
+        var periodos = await _periodos.GetAll();
+        var suyas = (await _inscripciones.GetAll()).Where(i => i.IdAlumno == _alumno.Id).ToList();
 
         var filas = (from i in suyas
                      join t in talleres on i.IdTaller equals t.Id
@@ -97,7 +98,12 @@ public class AlumnoDetalleViewModel : ViewModelBase, IQueryAttributable
 
         await Ejecutar(async () =>
         {
-            await _inscripciones.MarcarPagadaAsync(fila.Inscripcion);
+            var errores = new ValidatorClass();
+            if (!await _inscripciones.MarcarPagada(fila.Inscripcion, errores))
+            {
+                await Avisar("No se pudo marcar el pago", string.Join("\n", errores.Errores));
+                return;
+            }
             await Cargar();   // refresca la lista y el adeudo
         });
     }

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using SemillasCore.Validators;
-using SemillitasMobileApp.Services;
 
 namespace SemillitasMobileApp.Viewmodels;
 
@@ -29,7 +28,7 @@ public abstract class ViewModelBase : INotifyPropertyChanged
         set => SetField(ref _isBusy, value);
     }
 
-    // Corre una acción mostrando el indicador de carga y avisando si el API falla
+    // Corre una acción mostrando el indicador de carga y avisando si no hay conexión
     protected async Task Ejecutar(Func<Task> accion)
     {
         if (IsBusy) return;
@@ -37,10 +36,6 @@ public abstract class ViewModelBase : INotifyPropertyChanged
         {
             IsBusy = true;
             await accion();
-        }
-        catch (ApiException ex)
-        {
-            await Avisar("No se pudo completar", string.Join("\n", ex.Errores));
         }
         catch (HttpRequestException)
         {
