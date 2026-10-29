@@ -28,6 +28,8 @@ builder.Services.AddTransient<AlumnoExistenteValidator>();
 builder.Services.AddTransient<TallerExistenteEditValidator>();
 builder.Services.AddTransient<CreateTallerValidator>();
 builder.Services.AddTransient<TallerConInscripciones>();
+builder.Services.AddTransient<CreateAlumnoValidator>();
+builder.Services.AddTransient<SinCupoValidator>();
 
 var app = builder.Build();
 

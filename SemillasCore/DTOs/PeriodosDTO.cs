@@ -21,10 +21,7 @@ namespace SemillasCore.DTOs
     }
     public class PeriodoDTO : CreatePeriodoDTO {
         public int Id { get; set; }
-        public override string ToString()
-        {
-            return $"{MesInicio}-{MesFin}-{Año}";
-        }
+        public IEnumerable<NombreTalleres> NombreTalleres { get; set; } 
     }
     //[NoMesIgualesValidator(ErrorMessage = "Ya existe un periodo con esos meses y años-")]
     public class EditPeriodoDTO:CreatePeriodoDTO

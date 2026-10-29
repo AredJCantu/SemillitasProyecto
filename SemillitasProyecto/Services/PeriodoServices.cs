@@ -16,12 +16,7 @@ namespace SemillitasProyecto.Services
         public Repository<Periodos> Repository { get; }
 
         public IEnumerable<PeriodoDTO> GetAll() {
-            var data = Repository.GetAll().Select(p=>new PeriodoDTO {
-                Id= p.Id,
-                MesInicio= p.MesInicio,
-                MesFin=p.MesFin,
-                Año = p.Año
-            });
+            var data = Repository.Query().Include(x=>x.Talleres).Select(p=>p.ToDTO());
             return data;
         }
         public PeriodoDTO? GetById(int id)

@@ -8,8 +8,9 @@ public static class ApiClient
 {
     // TODO: poner la URL/puerto reales del API. En el emulador de Android "localhost" es el
     // propio emulador; la PC se ve como 10.0.2.2.
-    private static readonly string BaseUrl =
-        DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5000/" : "http://localhost:5000/";
+    //private static readonly string BaseUrl =
+    //    DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5000/" : "http://localhost:5000/";
+    private static readonly string BaseUrl = "https://localhost:44391/";
 
     private static readonly HttpClient Http = new() { BaseAddress = new Uri(BaseUrl) };
 

@@ -11,7 +11,10 @@ namespace SemillitasProyecto.Mappers
                 Nombre = entity.Nombre,
                 Apellido = entity.Apellido,
                 NombreTutor = entity.NombreTutor,
-                Telefono=entity.Telefono
+                Telefono=entity.Telefono,
+                TalleresAlumno=entity.Inscripciones.Select(x=>new NombreTalleres {
+                     Nombre=x.IdTallerNavigation.Nombre
+                })
             };
             return a;
         }

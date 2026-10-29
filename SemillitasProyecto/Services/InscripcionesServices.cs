@@ -30,7 +30,7 @@ namespace SemillitasProyecto.Services
             var data = Repository.GetAll().Select(x => x.ToDatosInscripcionesDTO());
             return data;
         }
-        public InscripcionesDTO? Create(CreateInscripcionesDTO dto) {
+        public InscripcionesDTO Create(CreateInscripcionesDTO dto) {
             var entity = dto.ToEntity();
             if (entity != null)
             {

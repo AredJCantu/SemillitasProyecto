@@ -81,6 +81,28 @@ namespace SemillitasProyecto.Services
             }
             return entities;
         }
-
+        //Get cuanto hay con disponibilidad
+        public int DisponibilidadTalleres() {
+            var entities = Repository.GetAll().Where(x => x.Cupo >= 6).Count();
+            return entities;
+        }
+        //Get cuanto hay con pocos lugare
+        public int PocaDisponibilidadTalleres()
+        {
+            var entities = Repository.GetAll().Where(x => x.Cupo <= 5&&x.Cupo>0).Count();
+            return entities;
+        }
+        //Get cuantos hay llenos
+        public int LLenosTalleres()
+        {
+            var entities = Repository.GetAll().Where(x => x.Cupo == 0).Count();
+            return entities;
+        }
+        //Get talleres disponibles
+        public IEnumerable<TallerDTO> GetTalleresDisponibles()
+        {
+            var data = Repository.Query().Include(x => x.Inscripciones).Where(x=>x.Cupo>0).Select(t => t.ToDTO());
+            return data;
+        }
     }
 }

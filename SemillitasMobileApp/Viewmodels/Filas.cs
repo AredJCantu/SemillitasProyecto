@@ -1,5 +1,3 @@
-using SemillitasMobileApp.Models;
-
 namespace SemillitasMobileApp.Viewmodels;
 
 // Una "fila" es el modelo ya preparado para mostrarse: texto formateado, colores (Tono), etc.

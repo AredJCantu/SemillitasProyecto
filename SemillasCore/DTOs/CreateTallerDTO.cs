@@ -30,8 +30,14 @@ namespace SemillasCore.DTOs
         public int IdPeriodo { get; set; }
         public IEnumerable<AlumnoDTO>? alumnos { get; set; }
     }
-    public class TallerDTO : CreateTallerDTO {
+    public class NombreTalleres {
+        public string Nombre { get; set; }
+    }
+    public class TallerDTO {
         public int Id { get; set; }
+        public string Nombre { get; set; } = null!;
+        public string Horario { get; set; } = "";
+        public int Cupo { get; set; }
         public int CantidadAlumnos { get; set; }
     }
     public class EditTallerDTO:CreateTallerDTO

@@ -16,7 +16,7 @@ namespace SemillitasProyecto.Services
         public Repository<Alumnos> Repository { get; }
 
         public IEnumerable<AlumnoDTO> GetAll() {
-            var data = Repository.GetAll().Select(a=>a.ToDTO());
+            var data = Repository.Query().Include(x=>x.Inscripciones).ThenInclude(i=>i.IdTallerNavigation).Select(a=>a.ToDTO());
             return data;
         }
         public AlumnoConInscripcionesDTO? GetDatosById(int id)

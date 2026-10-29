@@ -52,6 +52,23 @@ namespace SemillitasProyecto.Controllers
             var data = Servicio.GetPopulares();
             return Ok(data);
         }
+        [HttpGet("Cupo/")]
+        public IActionResult GetTalleresCupo() {
+            var data = Servicio.DisponibilidadTalleres();
+            return Ok(data);
+        }
+        [HttpGet("PocoCupo/")]
+        public IActionResult GetTalleresPocoCupo()
+        {
+            var data = Servicio.PocaDisponibilidadTalleres();
+            return Ok(data);
+        }
+        [HttpGet("SinCupo/")]
+        public IActionResult GetTalleresSinCupo()
+        {
+            var data = Servicio.LLenosTalleres();
+            return Ok(data);
+        }
         [HttpPost]
         public IActionResult Post(CreateTallerDTO dto) {
             var resultado = createValidator.IsValid(dto);

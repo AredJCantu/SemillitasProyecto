@@ -1,7 +1,7 @@
 <Solution>
   <Project Path="SemillasCore/SemillasCore.csproj" />
   <Project Path="SemillitasMobileApp/SemillitasApp.csproj">
-    <Deploy Solution="Debug|*" />
+    <Build Solution="Debug|*" Project="false" />
   </Project>
   <Project Path="SemillitasProyecto/SemillitasProyecto.csproj" />
 </Solution>

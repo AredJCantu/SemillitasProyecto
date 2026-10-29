@@ -66,6 +66,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\SemillasCore\SemillasCore.csproj" />
+	  <ProjectReference Include="..\SemillitasProyecto\SemillitasProyecto.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiXaml Update="Views\AndroidViews\AgendaView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

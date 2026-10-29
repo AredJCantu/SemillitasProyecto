@@ -23,8 +23,8 @@ namespace SemillasCore.DTOs
         public int Id { get; set; }
     }
     public class EditInscripcionesDTO : CreateInscripcionesDTO {
-    
-     }
+        public int Id { get; set; }
+    }
     public class DatosInscripcionesDTO
     {
         public int Id { get; set; }

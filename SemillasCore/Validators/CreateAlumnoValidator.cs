@@ -9,6 +9,7 @@ namespace SemillasCore.Validators
 {
     public class CreateAlumnoValidator
     {
+
         public virtual ValidatorClass IsValid(CreateAlumnoDTO dto)
         {
             ValidatorClass res = new();

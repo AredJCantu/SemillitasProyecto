@@ -6,22 +6,14 @@ namespace SemillitasProyecto.Mappers
 {
     public static class TalleresMappers
     {
-        public static TallerDTO? ToDTO(this Talleres entity)
+       public static TallerDTO? ToDTO(this Talleres entity)
         {
             TallerDTO taller = new() {
                 Id = entity.Id,
                 Nombre = entity.Nombre,
-                Costo = entity.Costo,
-                NombreInstructor = entity.NombreInstructor,
-                HoraInicio=entity.HoraInicio,
-                HoraFin=entity.HoraFin,
-                HoraInicioSabado=entity.HoraInicioSabado,
-                HoraFinSabado=entity.HoraFinSabado,
-                Categoria=entity.Categoria=="arte"?Commons.Categorias.arte:entity.Categoria=="deportes"?
-                Commons.Categorias.deportes:Commons.Categorias.tecnología,
-                Cupo=entity.Cupo,
-                IdPeriodo = entity.IdPeriodo,
-                CantidadAlumnos=entity.Inscripciones.Count
+                Horario = $"{entity.HoraInicio}-{entity.HoraFin}",
+                Cupo = entity.Cupo,
+                CantidadAlumnos = entity.Inscripciones.Count,
             };
             return taller;
         }
@@ -70,6 +62,14 @@ namespace SemillitasProyecto.Mappers
             entity.NombreInstructor = dto.NombreInstructor;
             entity.Categoria= dto.Categoria == Commons.Categorias.arte ? "arte" : dto.Categoria == Categorias.deportes ? "deportes" : "tecnología";
             entity.IdPeriodo= dto.IdPeriodo;
+        }
+
+        public static NombreTalleres ToNombreTalleresDTO(this Talleres entity)
+        {
+            NombreTalleres dto = new() {
+                Nombre=entity.Nombre
+            };
+            return dto;
         }
 
     }

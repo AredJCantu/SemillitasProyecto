@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SemillasCore.DTOs;
+using SemillasCore.Validators;
 using SemillitasProyecto.Services;
 
 namespace SemillitasProyecto.Controllers
@@ -9,9 +10,12 @@ namespace SemillitasProyecto.Controllers
     [ApiController]
     public class InscripcionesController : ControllerBase
     {
-        public InscripcionesController(InscripcionesServices servicio)
+        private readonly SinCupoValidator sincupoValidator;
+
+        public InscripcionesController(InscripcionesServices servicio,SinCupoValidator sincupoValidator)
         {
             Servicio = servicio;
+            this.sincupoValidator = sincupoValidator;
         }
 
         public InscripcionesServices Servicio { get; }
@@ -32,12 +36,13 @@ namespace SemillitasProyecto.Controllers
         }
         [HttpPost] 
         public IActionResult Post(CreateInscripcionesDTO dto) {
-            var data = Servicio.Create(dto);
-            if (data != null)
+            var res = sincupoValidator.IsValid(dto);
+            if (res.EsValido)
             {
-                return Created("api/inscripciones",data);
+                    var data = Servicio.Create(dto);
+                    return Created("api/inscripciones", data);
             }
-            return BadRequest();
+            return BadRequest(res.Errores);
         }
         [HttpPut("{id:int}")]
         public IActionResult Put(EditInscripcionesDTO dto,int id) {
