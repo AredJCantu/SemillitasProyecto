@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SemillasCore.DTOs;
+using SemillasCore.Validators;
 using SemillitasProyecto.Services;
+using SemillitasProyecto.Validators;
 
 namespace SemillitasProyecto.Controllers
 {
@@ -9,12 +11,17 @@ namespace SemillitasProyecto.Controllers
     [ApiController]
     public class AlumnosController : ControllerBase
     {
-        public AlumnosController(AlumnoServices servicio)
+        private readonly CreateAlumnoValidator createAlumnoValidator;
+
+        public AlumnosController(AlumnoServices servicio,CreateAlumnoValidator CreateAlumnoValidator,AlumnoExistenteValidator EditAlumnoValidator)
         {
             Servicio = servicio;
+            createAlumnoValidator = CreateAlumnoValidator;
+            this.EditAlumnoValidator = EditAlumnoValidator;
         }
 
         public AlumnoServices Servicio { get; }
+        public AlumnoExistenteValidator EditAlumnoValidator { get; }
 
         [HttpGet]
         public IActionResult GetAll() {
@@ -37,20 +44,27 @@ namespace SemillitasProyecto.Controllers
 
         [HttpPost]
         public IActionResult Post(CreateAlumnoDTO dto) {
-            var data = Servicio.Create(dto);
-            if (data != null) {
-                return Created("api/alumnos",dto);
+            var result = createAlumnoValidator.IsValid(dto);
+            if (result.EsValido) {
+                var alumno=Servicio.Create(dto);
+                return Ok(alumno);
             }
-            return BadRequest();
+            return BadRequest(result.Errores);
         }
         [HttpPut("{id:int}")]
         public IActionResult Put(EditAlumnoDTO dto,int id) {
-            var data = Servicio.Update(dto, id);
-            if (data != null)
+            dto.Id = id;
+            var result = EditAlumnoValidator.IsValid(dto);
+            if (result.EsValido)
             {
-                return Ok(data);
+                var data = Servicio.Update(dto, id);
+                if (data != null)
+                {
+                    return Ok(data);
+                }
+                return BadRequest();
             }
-            return BadRequest();
+            return BadRequest(result.Errores);
         }
 
         [HttpDelete("{id:int}")]

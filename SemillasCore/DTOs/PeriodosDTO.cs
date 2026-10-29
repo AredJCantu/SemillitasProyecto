@@ -29,6 +29,7 @@ namespace SemillasCore.DTOs
     //[NoMesIgualesValidator(ErrorMessage = "Ya existe un periodo con esos meses y años-")]
     public class EditPeriodoDTO:CreatePeriodoDTO
     {
+        public int Id { get; set; }
     }
     
 }

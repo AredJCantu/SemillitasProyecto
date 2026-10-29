@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using SemillitasProyecto.Data;
 using SemillitasProyecto.Repositories;
 using SemillitasProyecto.Services;
+using SemillitasProyecto.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,12 +12,18 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<SemillitasContext>(
     x=>x.UseMySql(cs,ServerVersion.AutoDetect(cs))
 );
-
+//Repository
 builder.Services.AddScoped(typeof(Repository<>));
-builder.Services.AddScoped(typeof(PeriodoServices));
-builder.Services.AddScoped(typeof(AlumnoServices));
-builder.Services.AddScoped<TalleresServices>();
-builder.Services.AddScoped<InscripcionesServices>();
+//Services
+builder.Services.AddTransient(typeof(PeriodoServices));
+builder.Services.AddTransient(typeof(AlumnoServices));
+builder.Services.AddTransient<TalleresServices>();
+builder.Services.AddTransient<InscripcionesServices>();
+//Validators
+builder.Services.AddTransient<PeriodoExistenteValidator>();
+builder.Services.AddTransient<PeriodoExistenteEdit>();
+builder.Services.AddTransient<PeriodoConTalleresValidator>();
+builder.Services.AddTransient<AlumnoExistenteValidator>();
 
 var app = builder.Build();
 

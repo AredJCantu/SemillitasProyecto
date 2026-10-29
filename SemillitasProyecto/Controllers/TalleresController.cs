@@ -21,6 +21,14 @@ namespace SemillitasProyecto.Controllers
             return Ok(Servicio.GetAll());
         }
         [HttpGet("{id:int}")]
+        public IActionResult GetById(int id) {
+            var data = Servicio.GetById(id);
+            if (data != null) {
+                return Ok(data);
+            }
+            return NotFound();
+        }
+        [HttpGet("datos/{id:int}")]
         public IActionResult GetDatosById(int id) {
             var data = Servicio.GetDatosById(id);
             if (data != null)
@@ -28,6 +36,11 @@ namespace SemillitasProyecto.Controllers
                 return Ok(data);
             }
             return NotFound();
+        }
+        [HttpGet("populares/")]
+        public IActionResult GetPopulares() {
+            var data = Servicio.GetPopulares();
+            return Ok(data);
         }
         [HttpPost]
         public IActionResult Post(CreateTallerDTO dto) {
@@ -56,6 +69,7 @@ namespace SemillitasProyecto.Controllers
             }
             return NotFound();
         }
+        
 
     }
 }

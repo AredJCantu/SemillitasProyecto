@@ -34,14 +34,14 @@ namespace SemillitasProyecto.Services
             return null;
         }
        
-        public PeriodoDTO? Create(CreatePeriodoDTO dto)
+        public PeriodoDTO Create(CreatePeriodoDTO dto)
         {
             Periodos entity = dto.ToEntity();
             Repository.Insert(entity);
             return entity.ToDTO();
         }
-        public PeriodoDTO? Update(EditPeriodoDTO dto,int id) {
-            var entity=Repository.GetById(id);
+        public PeriodoDTO? Update(EditPeriodoDTO dto) {
+            var entity=Repository.GetById(dto.Id);
             if (entity != null)
             {
                 dto.ApplyTo(entity);

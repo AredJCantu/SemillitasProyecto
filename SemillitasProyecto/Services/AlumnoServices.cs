@@ -29,7 +29,7 @@ namespace SemillitasProyecto.Services
             }
             return null;
         }
-        public AlumnoDTO? Create(CreateAlumnoDTO dto) {
+        public AlumnoDTO Create(CreateAlumnoDTO dto) {
             var entity = dto.ToEntity();
             Repository.Insert(entity);
             return entity.ToDTO();

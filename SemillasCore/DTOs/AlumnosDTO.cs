@@ -26,6 +26,7 @@ namespace SemillasCore.DTOs
         public IEnumerable<AlumnosInscripcionesDTO>? inscripciones { get; set; }
     }
     public class EditAlumnoDTO:CreateAlumnoDTO {
+        public int Id { get; set; }
     }
     
 }

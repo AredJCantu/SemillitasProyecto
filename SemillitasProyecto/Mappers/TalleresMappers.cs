@@ -1,4 +1,5 @@
 ﻿using SemillasCore.DTOs;
+using SemillitasProyecto.Commons;
 using SemillitasProyecto.Entities;
 
 namespace SemillitasProyecto.Mappers
@@ -16,9 +17,11 @@ namespace SemillitasProyecto.Mappers
                 HoraFin=entity.HoraFin,
                 HoraInicioSabado=entity.HoraInicioSabado,
                 HoraFinSabado=entity.HoraFinSabado,
-                Categoria=entity.Categoria,
+                Categoria=entity.Categoria=="arte"?Commons.Categorias.arte:entity.Categoria=="deportes"?
+                Commons.Categorias.deportes:Commons.Categorias.tecnología,
                 Cupo=entity.Cupo,
-                IdPeriodo = entity.IdPeriodo
+                IdPeriodo = entity.IdPeriodo,
+                CantidadAlumnos=entity.Inscripciones.Count
             };
             return taller;
         }
@@ -28,10 +31,10 @@ namespace SemillitasProyecto.Mappers
                 Costo= dto.Costo,
                 HoraInicio= dto.HoraInicio,
                 HoraFin= dto.HoraFin,
-                HoraInicioSabado = dto.HoraFinSabado,
+                HoraInicioSabado = dto.HoraInicioSabado,
                 HoraFinSabado= dto.HoraFinSabado,
                 NombreInstructor= dto.NombreInstructor,
-                Categoria = dto.Categoria,
+                Categoria = dto.Categoria==Commons.Categorias.arte?"arte":dto.Categoria==Categorias.deportes?"deportes":"tecnología",
                 IdPeriodo= dto.IdPeriodo,
                 Cupo= dto.Cupo
             };
@@ -65,7 +68,7 @@ namespace SemillitasProyecto.Mappers
             entity.HoraInicioSabado = dto.HoraInicioSabado;
             entity.HoraFinSabado = dto.HoraFinSabado;
             entity.NombreInstructor = dto.NombreInstructor;
-            entity.Categoria= dto.Categoria;
+            entity.Categoria= dto.Categoria == Commons.Categorias.arte ? "arte" : dto.Categoria == Categorias.deportes ? "deportes" : "tecnología";
             entity.IdPeriodo= dto.IdPeriodo;
         }
 
