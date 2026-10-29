@@ -25,10 +25,6 @@ public partial class SemillitasContext : DbContext
 
     public virtual DbSet<Talleres> Talleres { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseMySql("server=localhost;password=root;user=root;port=3307;database=Semillitas", Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.43-mysql"));
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -45,11 +41,12 @@ public partial class SemillitasContext : DbContext
             entity.Property(e => e.Apellido)
                 .HasMaxLength(100)
                 .HasColumnName("apellido");
-            entity.Property(e => e.ApellidoTutor).HasMaxLength(100);
             entity.Property(e => e.Nombre)
                 .HasMaxLength(100)
                 .HasColumnName("nombre");
-            entity.Property(e => e.NombreTutor).HasMaxLength(100);
+            entity.Property(e => e.NombreTutor)
+                .HasMaxLength(100)
+                .HasColumnName("nombre_tutor");
             entity.Property(e => e.Telefono)
                 .HasMaxLength(18)
                 .HasColumnName("telefono");
@@ -66,7 +63,9 @@ public partial class SemillitasContext : DbContext
             entity.HasIndex(e => e.IdTaller, "FK_Inscripciones_Taller");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Debe).HasColumnName("debe");
+            entity.Property(e => e.Debe)
+                .HasDefaultValueSql("'0'")
+                .HasColumnName("debe");
             entity.Property(e => e.IdAlumno).HasColumnName("id_alumno");
             entity.Property(e => e.IdTaller).HasColumnName("id_taller");
 
@@ -88,11 +87,10 @@ public partial class SemillitasContext : DbContext
             entity.ToTable("periodos");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Año).HasColumnName("año");
             entity.Property(e => e.MesFin)
-                .HasMaxLength(20)
                 .HasColumnName("mes_fin");
             entity.Property(e => e.MesInicio)
-                .HasMaxLength(20)
                 .HasColumnName("mes_inicio");
         });
 
@@ -111,6 +109,10 @@ public partial class SemillitasContext : DbContext
             entity.Property(e => e.Costo)
                 .HasPrecision(5, 2)
                 .HasColumnName("costo");
+            entity.Property(e => e.HoraFin).HasColumnName("hora_fin");
+            entity.Property(e => e.HoraFinSabado).HasColumnName("hora_fin_sabado");
+            entity.Property(e => e.HoraInicio).HasColumnName("hora_inicio");
+            entity.Property(e => e.HoraInicioSabado).HasColumnName("hora_inicio_sabado");
             entity.Property(e => e.IdPeriodo).HasColumnName("id_periodo");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(200)
