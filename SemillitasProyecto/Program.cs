@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SemillasCore.Validators;
 using SemillitasProyecto.Data;
 using SemillitasProyecto.Repositories;
 using SemillitasProyecto.Services;
@@ -24,6 +25,9 @@ builder.Services.AddTransient<PeriodoExistenteValidator>();
 builder.Services.AddTransient<PeriodoExistenteEdit>();
 builder.Services.AddTransient<PeriodoConTalleresValidator>();
 builder.Services.AddTransient<AlumnoExistenteValidator>();
+builder.Services.AddTransient<TallerExistenteEditValidator>();
+builder.Services.AddTransient<CreateTallerValidator>();
+builder.Services.AddTransient<TallerConInscripciones>();
 
 var app = builder.Build();
 

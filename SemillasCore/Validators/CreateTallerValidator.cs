@@ -23,9 +23,9 @@ namespace SemillasCore.Validators
             if (dto.HoraInicio > dto.HoraFin)
                 res.Errores.Add("Horas de entre semana del taller inválido. \n La hora de inicio debe ser antes que la hora de cierre del taller.");
             
-            if (dto.HoraInicioSabado <= 5 || dto.HoraInicio >= 12)
+            if (dto.HoraInicioSabado < 5 || dto.HoraInicioSabado > 12)
                 res.Errores.Add("Hora de inicio de fin de semana del taller inválido. \n El taller debe tener una hora de inicio de fin de semana entre 5am y 11.");
-            if (dto.HoraFin <= 6 || dto.HoraFin >= 13)
+            if (dto.HoraFinSabado < 6 || dto.HoraFinSabado > 13)
                 res.Errores.Add("Hora de cierre de fin de semana del taller inválido. \n El taller debe tener una hora de cierre entre 6am y 13pm");
             if (dto.HoraInicioSabado > dto.HoraFinSabado)
                 res.Errores.Add("Horas de fin de semana del taller inválido. \n La hora de inicio debe ser antes que la hora de cierre del taller.");

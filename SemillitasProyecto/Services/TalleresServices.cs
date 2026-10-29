@@ -40,15 +40,15 @@ namespace SemillitasProyecto.Services
             }
             return null;
         }
-        public TallerDTO? Create(CreateTallerDTO dto)
+        public TallerDTO Create(CreateTallerDTO dto)
         {
             Talleres Entity = dto.ToEntity();
             Repository.Insert(Entity);
             return Entity.ToDTO();
         }
-        public TallerDTO? Update(EditTallerDTO dto, int id)
+        public TallerDTO? Update(EditTallerDTO dto)
         {
-            var entity = Repository.GetById(id);
+            var entity = Repository.GetById(dto.Id);
             if (entity != null)
             {
                 dto.ApplyTo(entity);
@@ -72,16 +72,11 @@ namespace SemillitasProyecto.Services
         public IEnumerable<TallerDTO> GetPopulares() {
             var entities = Repository.Query().Include(x => x.Inscripciones).OrderByDescending(x => x.Inscripciones.Count).Select(x=>x.ToDTO()).Take(5).ToList();
             var ultimo = entities.TakeLast(1).FirstOrDefault();
-            if (ultimo != null)
+            var repetidos = Repository.Query().Include(x => x.Inscripciones).OrderByDescending(x => x.Inscripciones.Count).Select(x => x.ToDTO()).Where(x=>x.CantidadAlumnos==ultimo.CantidadAlumnos);
+           foreach(var i in repetidos)
             {
-                foreach (var item in Repository.Query().Include(x => x.Inscripciones).OrderByDescending(x => x.Inscripciones.Count).Select(x => x.ToDTO()))
-                {
-                    if (item.CantidadAlumnos < ultimo.CantidadAlumnos)
-                        break;
-                    if (item.CantidadAlumnos == ultimo.CantidadAlumnos && entities.All(x => x.Id != item.Id))
-                    {
-                        entities.Add(item);
-                    }
+                if (!entities.Any(x => x.Id == i.Id)) {
+                    entities.Add(i);
                 }
             }
             return entities;
