@@ -16,7 +16,7 @@ namespace SemillitasProyecto.Validators
         public override ValidatorClass IsValid(EditPeriodoDTO dto)
         {
             ValidatorClass result = base.IsValid(dto);
-            if (repos.GetAll().Any(x => x.MesInicio == dto.MesInicio && x.MesFin == dto.MesFin && x.Año == dto.Año && x.Id != dto.Id))
+            if (repos.Query().ToList().Any(x => x.MesInicio == dto.MesInicio && x.MesFin == dto.MesFin && x.Año == dto.Año && x.Id != dto.Id))
                 result.Errores.Add("Ya existe un periodo con esas caracteristicas");
             return result;
         }

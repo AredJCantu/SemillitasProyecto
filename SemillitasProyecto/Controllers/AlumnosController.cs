@@ -13,15 +13,17 @@ namespace SemillitasProyecto.Controllers
     {
         private readonly CreateAlumnoValidator createAlumnoValidator;
 
-        public AlumnosController(AlumnoServices servicio,CreateAlumnoValidator CreateAlumnoValidator,AlumnoExistenteValidator EditAlumnoValidator)
+        public AlumnosController(AlumnoServices servicio,CreateAlumnoValidator CreateAlumnoValidator,AlumnoExistenteValidator EditAlumnoValidator, AlumnoConInscripcionValidator deleteAlumnoValidator)
         {
             Servicio = servicio;
             createAlumnoValidator = CreateAlumnoValidator;
             this.EditAlumnoValidator = EditAlumnoValidator;
+            DeleteAlumnoValidator = deleteAlumnoValidator;
         }
 
         public AlumnoServices Servicio { get; }
         public AlumnoExistenteValidator EditAlumnoValidator { get; }
+        public AlumnoConInscripcionValidator DeleteAlumnoValidator { get; }
 
         [HttpGet]
         public IActionResult GetAll() {
@@ -69,10 +71,16 @@ namespace SemillitasProyecto.Controllers
 
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id) {
-            if (Servicio.Delete(id)){
-                return NoContent();
+            var result = DeleteAlumnoValidator.IsValid(id);
+            if (result.EsValido)
+            {
+                if (Servicio.Delete(id))
+                {
+                    return NoContent();
+                }
+                return NotFound();
             }
-            return NotFound();
+            return BadRequest(result.Errores);
         }
 
     }

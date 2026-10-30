@@ -10,7 +10,7 @@ public abstract class ViewModelBase : INotifyPropertyChanged
 
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-
+    
     protected bool SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
     {
         if (Equals(field, value)) return false;

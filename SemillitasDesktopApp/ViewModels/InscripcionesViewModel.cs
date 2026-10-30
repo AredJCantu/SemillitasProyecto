@@ -43,18 +43,15 @@ public class InscripcionesViewModel : ViewModelBase
     }
 
     // ---------- Inscribir ----------
+    private NombreAlumnoDTO _alumnoSeleccionado;
+    public NombreAlumnoDTO AlumnoSeleccionado { get=>_alumnoSeleccionado; set { SetField(ref _alumnoSeleccionado, value); Aplicar(); } }
 
-    private string _textoBusquedaAlumno = "";
-    public string TextoBusquedaAlumno
-    {
-        get => _textoBusquedaAlumno;
-        set { if (SetField(ref _textoBusquedaAlumno, value)) BuscarAlumno(value); }
-    }
 
+
+    public List<NombreAlumnoDTO> NombresdeAlumnos { get; set; } = new();
     private string _nombreAlumno = "";
     public string NombreAlumno { get => _nombreAlumno; set => SetField(ref _nombreAlumno, value); }
-
-    private string _apellidoAlumno = "";
+    private string _apellidoAlumno;
     public string ApellidoAlumno { get => _apellidoAlumno; set => SetField(ref _apellidoAlumno, value); }
 
     private string _nombreTutor = "";
@@ -126,6 +123,15 @@ public class InscripcionesViewModel : ViewModelBase
         {
             _talleres = await talleresService.GetAll();
             _alumnos = await alumnosService.GetAll();
+            NombresdeAlumnos.Clear();
+            foreach (var a in _alumnos) {
+                NombreAlumnoDTO dto = new()
+                {
+                    Id = a.Id,
+                    Nombre = a.Nombre
+                };
+                NombresdeAlumnos.Add(dto); 
+            }
             _inscripciones = await inscripcionesService.GetAll();
             var lista = await periodosService.GetAll();
 
@@ -182,24 +188,6 @@ public class InscripcionesViewModel : ViewModelBase
 
         Total = Formato.Dinero(_agregados.Sum(t => t.Costo));
     }
-
-    // Buscador: si hay una sola coincidencia se llenan los datos del alumno
-    private void BuscarAlumno(string texto)
-    {
-        _alumnoExistente = null;
-        if (string.IsNullOrWhiteSpace(texto)) return;
-
-        var coincidencias = _alumnos.Where(a => Formato.Contiene(Formato.NombreCompleto(a), texto)).ToList();
-        if (coincidencias.Count != 1) return;
-
-        var elegido = coincidencias[0];
-        _alumnoExistente = elegido;
-        NombreAlumno = elegido.Nombre;
-        ApellidoAlumno = elegido.Apellido;
-        NombreTutor = elegido.NombreTutor;
-        TelefonoAlumno = elegido.Telefono;
-    }
-
     private void AlternarTaller(object? parametro)
     {
         if (parametro is not TallerFila fila) return;
@@ -246,7 +234,7 @@ public class InscripcionesViewModel : ViewModelBase
                 MostrarErrores(errores.Errores);
                 return;
             }
-
+            alumno.Id = _alumnoSeleccionado.Id;
             // Una inscripción por taller; Debe = true hasta que se marque el pago en Cobranza
             foreach (var taller in _agregados.ToList())
             {
@@ -273,7 +261,6 @@ public class InscripcionesViewModel : ViewModelBase
     {
         _agregados.Clear();
         _alumnoExistente = null;
-        TextoBusquedaAlumno = "";
         NombreAlumno = ApellidoAlumno = NombreTutor = TelefonoAlumno = "";
         Errores.Clear();
         Reconstruir();
@@ -336,5 +323,16 @@ public class InscripcionesViewModel : ViewModelBase
         {
             _main.ShowToast("Sin conexión", ex.Message);
         }
+
+    }
+    private void Aplicar()
+    {
+        var alumno = _alumnos.Where(x => x.Id == _alumnoSeleccionado.Id).FirstOrDefault();
+        
+        NombreAlumno = alumno.Nombre;
+        ApellidoAlumno = alumno.Apellido;
+        NombreTutor = alumno.NombreTutor;
+        TelefonoAlumno = alumno.Telefono;
+        _alumnoExistente = new();
     }
 }

@@ -59,7 +59,7 @@
                 <StackPanel>
                     <TextBlock Text="Alumno" Style="{StaticResource Seccion}" Margin="0,0,0,10" />
                     <TextBlock Text="Buscar alumno ya registrado (opcional)" Style="{StaticResource Etiqueta}" />
-                    <TextBox Text="{Binding TextoBusquedaAlumno, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                    <ComboBox ItemsSource="{Binding NombresdeAlumnos}" SelectedItem="{Binding AlumnoSeleccionado}" Width="150" />
                     <UniformGrid Columns="2">
                         <StackPanel Margin="0,0,10,10">
                             <TextBlock Text="Nombre" Style="{StaticResource Etiqueta}" />

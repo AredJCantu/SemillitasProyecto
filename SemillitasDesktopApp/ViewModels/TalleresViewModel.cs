@@ -133,6 +133,7 @@ public class TalleresViewModel : ViewModelBase
     public ICommand GuardarCommand { get; }
     public ICommand CerrarCommand { get; }
     public ICommand InscribirCommand { get; }
+    public ICommand EliminarAlumnoCommand { get; set; }
 
     public TalleresViewModel(MainViewModel main)
     {
@@ -145,6 +146,57 @@ public class TalleresViewModel : ViewModelBase
         GuardarCommand = new RelayCommand(_ => Guardar());
         CerrarCommand = new RelayCommand(_ => Cerrar());
         InscribirCommand = new RelayCommand(Inscribir);
+        EliminarAlumnoCommand = new RelayCommand(EliminarAlumno);
+    }
+
+    private async void EliminarAlumno(object? filaParameter)
+    {
+        // Como en tu XAML pasaste CommandParameter="{Binding}", 
+        // el parámetro recibido es la fila completa de la inscripción.
+        if (filaParameter is not InscripcionFila fila) return;
+
+        var respuesta = MessageBox.Show(
+            $"¿Deseas eliminar a \"{fila.Alumno}\" de este taller?",
+            "Eliminar inscripción",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (respuesta != MessageBoxResult.Yes) return;
+
+        try
+        {
+            var errores = new ValidatorClass();
+            bool eliminado = await inscripcionesService.Delete(fila.Inscripcion.Id, errores);
+
+            if (eliminado)
+            {
+                _main.ShowToast("Alumno eliminado", $"Se removió a \"{fila.Alumno}\" del taller.");
+
+                // Actualizamos la lista general de talleres para reflejar el cambio en los cupos
+                _todos = await talleresService.GetAll();
+
+                // Actualizamos el objeto Detalle actual con su nueva información de cupo/ocupación
+                var tallerActualizado = _todos.FirstOrDefault(t => t.Id == Detalle?.Taller.Id);
+                if (tallerActualizado != null)
+                {
+                    Detalle = new TallerFila(tallerActualizado);
+                }
+
+                // Removemos de la colección visual para que se actualice la tabla al instante
+                Inscritos.Remove(fila);
+
+                // Refrescamos los filtros generales de la vista
+                Aplicar();
+            }
+            else
+            {
+                _main.ShowToast("No se pudo eliminar", string.Join("\n", errores.Errores));
+            }
+        }
+        catch (Exception ex)
+        {
+            _main.ShowToast("Sin conexión", ex.Message);
+        }
     }
 
     private static List<string> Lista(int primera, int ultima) =>

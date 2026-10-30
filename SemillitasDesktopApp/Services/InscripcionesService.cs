@@ -73,4 +73,14 @@ public class InscripcionesService
 
         errores.Errores.Add($"El servidor respondió {(int)response.StatusCode}.");
     }
+    public async Task<bool> Delete(int id, ValidatorClass errores) {
+        var response = await cliente.DeleteAsync($"api/inscripciones/{id}");
+        if (!response.IsSuccessStatusCode)
+        {
+            await LeerErrores(response, errores);
+            return false;
+        }
+
+        return true;
+    }
 }

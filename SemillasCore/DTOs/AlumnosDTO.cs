@@ -22,6 +22,14 @@ namespace SemillasCore.DTOs
         public int Id { get; set; }
         public IEnumerable<NombreTalleres> TalleresAlumno { get; set; }
     }
+    public class NombreAlumnoDTO {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+        public override string ToString()
+        {
+            return Nombre;
+        }
+    }
     public class AlumnoConInscripcionesDTO : AlumnoDTO
     {
         public IEnumerable<AlumnosInscripcionesDTO>? inscripciones { get; set; }
