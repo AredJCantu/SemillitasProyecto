@@ -31,6 +31,7 @@ builder.Services.AddTransient<TallerConInscripciones>();
 builder.Services.AddTransient<CreateAlumnoValidator>();
 builder.Services.AddTransient<SinCupoValidator>();
 builder.Services.AddTransient<AlumnoConInscripcionValidator>();
+builder.Services.AddTransient<EmpalmeValidator>();
 
 var app = builder.Build();
 

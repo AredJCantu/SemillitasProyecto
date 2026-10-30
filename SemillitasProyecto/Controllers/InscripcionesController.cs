@@ -12,13 +12,15 @@ namespace SemillitasProyecto.Controllers
     {
         private readonly SinCupoValidator sincupoValidator;
 
-        public InscripcionesController(InscripcionesServices servicio,SinCupoValidator sincupoValidator)
+        public InscripcionesController(InscripcionesServices servicio,SinCupoValidator sincupoValidator,EmpalmeValidator empalmeValidator)
         {
             Servicio = servicio;
             this.sincupoValidator = sincupoValidator;
+            EmpalmeValidator = empalmeValidator;
         }
 
         public InscripcionesServices Servicio { get; }
+        public EmpalmeValidator EmpalmeValidator { get; }
 
         [HttpGet]
         public IActionResult GetAll() {
@@ -37,12 +39,15 @@ namespace SemillitasProyecto.Controllers
         [HttpPost] 
         public IActionResult Post(CreateInscripcionesDTO dto) {
             var res = sincupoValidator.IsValid(dto);
-            if (res.EsValido)
+            var res2 = EmpalmeValidator.IsValid(dto);
+            if (res.EsValido&&res2.EsValido)
             {
                     var data = Servicio.Create(dto);
                     return Created("api/inscripciones", data);
             }
-            return BadRequest(res.Errores);
+            foreach (var e in res.Errores)
+                res2.Errores.Add(e);
+            return BadRequest(res2.Errores);
         }
         [HttpPut("{id:int}")]
         public IActionResult Put(EditInscripcionesDTO dto,int id) {

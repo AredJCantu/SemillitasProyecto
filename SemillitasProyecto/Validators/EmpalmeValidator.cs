@@ -11,26 +11,55 @@ using System.Threading.Tasks;
 
 namespace SemillasCore.Validators
 {
-    public class EmpalmeValidator:ValidationAttribute
+    public class EmpalmeValidator
     {
-        private readonly Repository<Inscripciones> reposInscripciones;
+        private readonly Repository<Inscripciones> _reposInscripciones;
+        private readonly Repository<Talleres> _reposTalleres;
 
-        public EmpalmeValidator(Repository<Inscripciones> reposInscripciones)
+        // Inyectamos los repositorios necesarios a través de tu arquitectura
+        public EmpalmeValidator(Repository<Inscripciones> reposInscripciones, Repository<Talleres> reposTalleres)
         {
-            this.reposInscripciones = reposInscripciones;
+            _reposInscripciones = reposInscripciones;
+            _reposTalleres = reposTalleres;
         }
-        //public virtual ValidatorClass IsValid(CreateInscripcionesDTO dto)
-        //{
-        //    ValidatorClass res = new();
-        //    //Todas las inscripciuones del alumno
-        //    var Inscripciones = reposInscripciones.Query().Include(x=>x.IdTallerNavigation).Where(x=>x.IdAlumno==dto.IdAlumno).ToList();
-        //    //periodo del taller que se quiere inscribir
-        //    var periodo=reposInscripciones.Query().Include(x=>x.IdTallerNavigation).Where(x=>x.IdTaller==dto.IdTaller).ToList();
-        //    foreach (var i in Inscripciones) {
-        //        if()
-        //    }
 
-        //    return res;
-        //}
+        public ValidatorClass IsValid(CreateInscripcionesDTO dto)
+        {
+            ValidatorClass res = new();
+
+            var tallerNuevo = _reposTalleres.GetById(dto.IdTaller);
+            if (tallerNuevo == null)
+            {
+                res.Errores.Add("El taller seleccionado no existe.");
+                return res;
+            }
+
+            var inscripcionesExistentes = _reposInscripciones.Query()
+                .Include(x => x.IdTallerNavigation)
+                .Where(x => x.IdAlumno == dto.IdAlumno)
+                .ToList();
+
+            foreach (var inscripcion in inscripcionesExistentes)
+            {
+                var tallerInscrito = inscripcion.IdTallerNavigation;
+
+                bool solapamientoSemana = (tallerInscrito.HoraInicio < tallerNuevo.HoraFin) &&
+                                          (tallerNuevo.HoraInicio < tallerInscrito.HoraFin);
+
+
+                bool    solapamientoSabado = (tallerInscrito.HoraInicioSabado < tallerNuevo.HoraFinSabado) &&
+                                         (tallerNuevo.HoraInicioSabado < tallerInscrito.HoraFinSabado);
+                
+
+                // Si hay cruce en semana o en sábado, guardamos el error
+                if (solapamientoSemana || solapamientoSabado)
+                {
+                    res.Errores.Add($"El horario se solapa con el taller '{tallerInscrito.Nombre}' en el que ya está inscrito.");
+                    return res;
+                }
+            }
+
+            return res;
+        }
     }
 }
