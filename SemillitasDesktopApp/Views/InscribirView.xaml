@@ -1,0 +1,156 @@
+<!--
+    Inscribir a un alumno (nuevo o ya registrado) en talleres del período (DataContext: InscripcionesViewModel).
+    Lee: Periodos, PeriodoSeleccionado, TextoBusquedaAlumno, NombreAlumno, ApellidoAlumno, NombreTutor, TelefonoAlumno,
+         TalleresPeriodo[Nombre, Horario, HorarioSabado, Costo, Badge, Tono, Accion], Resumen[Nombre, Horario, Costo], Total, Errores
+    Accion: Disponible | Agregado | Choque | Lleno (la decide el ViewModel)
+    Commands: AlternarTallerCommand (fila), QuitarCommand (fila), ConfirmarCommand, LimpiarCommand
+-->
+<UserControl x:Class="SemillitasDesktopApp.Views.InscribirView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <!-- El botón de cada taller cambia según Accion -->
+        <Style x:Key="BotonAccion" TargetType="Button" BasedOn="{StaticResource BotonPrimario}">
+            <Setter Property="Content" Value="Agregar" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Accion}" Value="Agregado">
+                    <Setter Property="Content" Value="Quitar" />
+                    <Setter Property="Background" Value="{StaticResource Blanco}" />
+                    <Setter Property="Foreground" Value="{StaticResource RojoTexto}" />
+                    <Setter Property="BorderBrush" Value="{StaticResource BordeCampo}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Accion}" Value="Choque">
+                    <Setter Property="Content" Value="Choca horario" />
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Accion}" Value="Lleno">
+                    <Setter Property="Content" Value="Lleno" />
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="20" />
+            <ColumnDefinition Width="340" />
+        </Grid.ColumnDefinitions>
+
+        <DockPanel Grid.ColumnSpan="3" Margin="0,0,0,16">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <TextBlock Text="Período" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox ItemsSource="{Binding Periodos}" SelectedItem="{Binding PeriodoSeleccionado}" Width="150" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Inscribir" Style="{StaticResource Titulo}" />
+                <TextBlock Text="Datos del alumno y talleres a los que se inscribe." Style="{StaticResource Subtitulo}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Izquierda: alumno + talleres -->
+        <DockPanel Grid.Row="1">
+            <Border DockPanel.Dock="Top" Style="{StaticResource Tarjeta}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Alumno" Style="{StaticResource Seccion}" Margin="0,0,0,10" />
+                    <TextBlock Text="Buscar alumno ya registrado (opcional)" Style="{StaticResource Etiqueta}" />
+                    <TextBox Text="{Binding TextoBusquedaAlumno, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,12" />
+                    <UniformGrid Columns="2">
+                        <StackPanel Margin="0,0,10,10">
+                            <TextBlock Text="Nombre" Style="{StaticResource Etiqueta}" />
+                            <TextBox Text="{Binding NombreAlumno, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,10">
+                            <TextBlock Text="Apellidos" Style="{StaticResource Etiqueta}" />
+                            <TextBox Text="{Binding ApellidoAlumno, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,10,0">
+                            <TextBlock Text="Nombre del tutor" Style="{StaticResource Etiqueta}" />
+                            <TextBox Text="{Binding NombreTutor, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Margin="10,0,0,0">
+                            <TextBlock Text="Teléfono" Style="{StaticResource Etiqueta}" />
+                            <TextBox Text="{Binding TelefonoAlumno, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <DataGrid ItemsSource="{Binding TalleresPeriodo}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="TALLER" Binding="{Binding Nombre}" Width="2*" FontWeight="SemiBold" />
+                    <DataGridTextColumn Header="ENTRE SEMANA" Binding="{Binding Horario}" Width="*" />
+                    <DataGridTextColumn Header="SÁBADO" Binding="{Binding HorarioSabado}" Width="*" />
+                    <DataGridTextColumn Header="COSTO" Binding="{Binding Costo}" Width="80" />
+                    <DataGridTemplateColumn Header="LUGARES" Width="110">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Badge}">
+                                    <TextBlock Text="{Binding Badge}" Style="{StaticResource BadgeTexto}" />
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource BotonAccion}"
+                                        Command="{Binding DataContext.AlternarTallerCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </DockPanel>
+
+        <!-- Derecha: resumen -->
+        <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Tarjeta}" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Resumen" Style="{StaticResource Seccion}" Margin="0,0,0,10" />
+
+                <ItemsControl ItemsSource="{Binding Resumen}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <DockPanel Margin="0,0,0,10">
+                                <Button DockPanel.Dock="Right" Content="Quitar" Style="{StaticResource BotonPeligro}" Padding="10,4"
+                                        Command="{Binding DataContext.QuitarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}" />
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" />
+                                    <TextBlock Style="{StaticResource Nota}">
+                                        <Run Text="{Binding Horario, Mode=OneWay}" /> · <Run Text="{Binding Costo, Mode=OneWay}" />
+                                    </TextBlock>
+                                </StackPanel>
+                            </DockPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Border BorderBrush="{StaticResource Linea}" BorderThickness="0,1,0,0" Padding="0,10,0,0" Margin="0,4,0,10">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Total}" FontSize="18" FontWeight="Bold" />
+                        <TextBlock Text="Total" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" />
+                    </DockPanel>
+                </Border>
+
+                <!-- Lista única de errores -->
+                <ItemsControl ItemsSource="{Binding Errores}" Margin="0,0,0,8">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Style="{StaticResource Error}" Margin="0,0,0,4" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button Content="Confirmar inscripción" Style="{StaticResource BotonPrimario}" Command="{Binding ConfirmarCommand}" Margin="0,0,0,8" />
+                <Button Content="Limpiar" Style="{StaticResource BotonSecundario}" Command="{Binding LimpiarCommand}" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

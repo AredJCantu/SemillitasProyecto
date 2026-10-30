@@ -3,13 +3,13 @@
     <Platform Name="Any CPU" />
     <Platform Name="x64" />
   </Configurations>
-  <Project Path="../../../Downloads/Semillitas_refactor/SemillitasProyecto3/SemillitasDesktopApp/SemillitasDesktopApp.csproj">
-    <Platform Solution="Release|x64" Project="x64" />
-  </Project>
-  <Project Path="../../../Downloads/Semillitas_refactor/SemillitasProyecto3/SemillitasMobileApp/SemillitasApp.csproj">
-    <Platform Solution="*|x64" Project="x64" />
-    <Deploy Solution="Debug|*" />
-  </Project>
   <Project Path="SemillasCore/SemillasCore.csproj" />
+  <Project Path="SemillitasDesktopApp/SemillitasDesktopApp.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+  <Project Path="SemillitasMobileApp/SemillitasApp.csproj">
+    <Platform Solution="*|x64" Project="x64" />
+    <Deploy Solution="Debug|x64" />
+  </Project>
   <Project Path="SemillitasProyecto/SemillitasProyecto.csproj" />
 </Solution>

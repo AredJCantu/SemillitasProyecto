@@ -1,0 +1,89 @@
+<!--
+    Períodos con su CRUD (DataContext: PeriodosViewModel).
+    Lista: Periodos[MesInicio, MesFin, Anio, CantidadTalleres]
+    Formulario: IsFormularioAbierto, TituloFormulario, Meses (1 a 12), MesInicio, MesFin, Anio, Errores
+    Commands: NuevoCommand, EditarCommand, EliminarCommand (fila), GuardarCommand, CerrarCommand
+-->
+<UserControl x:Class="SemillitasDesktopApp.Views.PeriodosView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <!-- Lista -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="0,0,0,16">
+                <Button DockPanel.Dock="Right" Content="+ Nuevo período" Style="{StaticResource BotonPrimario}"
+                        Command="{Binding NuevoCommand}" VerticalAlignment="Bottom" />
+                <StackPanel>
+                    <TextBlock Text="Períodos" Style="{StaticResource Titulo}" />
+                    <TextBlock Text="Los talleres se ofrecen dentro de un período." Style="{StaticResource Subtitulo}" />
+                </StackPanel>
+            </DockPanel>
+
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Periodos}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="MES DE INICIO" Binding="{Binding MesInicio}" Width="*" />
+                    <DataGridTextColumn Header="MES DE FIN" Binding="{Binding MesFin}" Width="*" />
+                    <DataGridTextColumn Header="AÑO" Binding="{Binding Anio}" Width="*" />
+                    <DataGridTextColumn Header="TALLERES" Binding="{Binding CantidadTalleres}" Width="*" />
+                    <DataGridTemplateColumn Width="200">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Editar" Style="{StaticResource BotonSecundario}" Margin="0,0,6,0"
+                                            Command="{Binding DataContext.EditarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                    <Button Content="Eliminar" Style="{StaticResource BotonPeligro}"
+                                            Command="{Binding DataContext.EliminarCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <!-- Formulario nuevo / editar -->
+        <Grid Style="{StaticResource Velo}" Visibility="{Binding IsFormularioAbierto, Converter={StaticResource BoolAVisible}}">
+            <Border Style="{StaticResource Tarjeta}" Width="520" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="{Binding TituloFormulario}" Style="{StaticResource Seccion}" Margin="0,0,0,16" />
+
+                    <UniformGrid Columns="3">
+                        <StackPanel Margin="0,0,8,12">
+                            <TextBlock Text="Mes de inicio" Style="{StaticResource Etiqueta}" />
+                            <ComboBox ItemsSource="{Binding Meses}" SelectedItem="{Binding MesInicio}" />
+                        </StackPanel>
+                        <StackPanel Margin="4,0,4,12">
+                            <TextBlock Text="Mes de fin" Style="{StaticResource Etiqueta}" />
+                            <ComboBox ItemsSource="{Binding Meses}" SelectedItem="{Binding MesFin}" />
+                        </StackPanel>
+                        <StackPanel Margin="8,0,0,12">
+                            <TextBlock Text="Año" Style="{StaticResource Etiqueta}" />
+                            <TextBox Text="{Binding Anio, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                    </UniformGrid>
+
+                    <!-- Lista única de errores -->
+                    <ItemsControl ItemsSource="{Binding Errores}" Margin="0,4,0,8">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" Style="{StaticResource Error}" Margin="0,0,0,4" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Cancelar" Style="{StaticResource BotonSecundario}" Command="{Binding CerrarCommand}" Margin="0,0,8,0" />
+                        <Button Content="Guardar período" Style="{StaticResource BotonPrimario}" Command="{Binding GuardarCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

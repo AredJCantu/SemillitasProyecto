@@ -1,12 +1,123 @@
-﻿<Window x:Class="SemillitasDesktopApp.MainWindow"
+<!--
+    Ventana principal: menú a la izquierda y la sección elegida a la derecha.
+    Como en Sonrisas, el DataContext es MainViewModel. CurrentPage es el ViewModel de la sección
+    y el estilo del ContentControl elige qué vista usar según SelectedNav.Key.
+-->
+<Window x:Class="SemillitasDesktopApp.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:SemillitasDesktopApp"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        xmlns:vm="clr-namespace:SemillitasDesktopApp.ViewModels"
+        xmlns:v="clr-namespace:SemillitasDesktopApp.Views"
+        Title="Semillitas" Height="820" Width="1320" MinWidth="1100" MinHeight="640"
+        WindowStartupLocation="CenterScreen" Background="{StaticResource Fondo}">
+
+    <Window.DataContext>
+        <vm:MainViewModel />
+    </Window.DataContext>
+
+    <Window.Resources>
+        <!-- Una plantilla por sección; el DataContext de cada vista es CurrentPage -->
+        <DataTemplate x:Key="VistaDisponibilidad"><v:DisponibilidadView /></DataTemplate>
+        <DataTemplate x:Key="VistaInscribir"><v:InscribirView /></DataTemplate>
+        <DataTemplate x:Key="VistaCobranza"><v:CobranzaView /></DataTemplate>
+        <DataTemplate x:Key="VistaAgenda"><v:AgendaView /></DataTemplate>
+        <DataTemplate x:Key="VistaTalleres"><v:TalleresView /></DataTemplate>
+        <DataTemplate x:Key="VistaAlumnos"><v:AlumnosView /></DataTemplate>
+        <DataTemplate x:Key="VistaPeriodos"><v:PeriodosView /></DataTemplate>
+
+        <!-- Opción del menú; la elegida se marca con el color primario -->
+        <Style x:Key="OpcionMenu" TargetType="ListBoxItem">
+            <Setter Property="Foreground" Value="#D6E4DC" />
+            <Setter Property="FontSize" Value="15" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Caja" Background="Transparent" CornerRadius="8" Padding="14,10" Margin="0,2">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Caja" Property="Background" Value="#2C4A3C" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Caja" Property="Background" Value="{StaticResource Primario}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Menú lateral -->
+        <Border Background="{StaticResource PrimarioOscuro}" Padding="14,24">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="8,0,0,24">
+                    <TextBlock Text="Semillitas" FontSize="22" FontWeight="Bold" Foreground="White" />
+                    <TextBlock Text="Recepción" FontSize="13" Foreground="#A9C2B5" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding NavItems}" SelectedItem="{Binding SelectedNav}"
+                         ItemContainerStyle="{StaticResource OpcionMenu}"
+                         Background="Transparent" BorderThickness="0">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Title}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Sección actual -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" Margin="28,22">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Setter Property="ContentTemplate" Value="{StaticResource VistaDisponibilidad}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding SelectedNav.Key}" Value="Inscribir">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VistaInscribir}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SelectedNav.Key}" Value="Cobranza">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VistaCobranza}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SelectedNav.Key}" Value="Agenda">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VistaAgenda}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SelectedNav.Key}" Value="Talleres">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VistaTalleres}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SelectedNav.Key}" Value="Alumnos">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VistaAlumnos}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding SelectedNav.Key}" Value="Periodos">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VistaPeriodos}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
+
+        <!-- Avisos (toasts) abajo a la derecha -->
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Toasts}"
+                      HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,24" Width="340">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border Background="{StaticResource PrimarioOscuro}" CornerRadius="10" Padding="16,12" Margin="0,8,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Title}" Foreground="White" FontWeight="Bold" FontSize="14" />
+                            <TextBlock Text="{Binding Message}" Foreground="#D6E4DC" FontSize="13" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
     </Grid>
 </Window>

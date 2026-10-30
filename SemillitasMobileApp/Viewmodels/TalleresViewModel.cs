@@ -1,79 +1,103 @@
+using System.Windows.Input;
 using SemillasCore.DTOs;
-using SemillasCore.Validators;
-using SemillitasMobileApp.Commands;
 using SemillitasMobileApp.Helpers;
+using SemillitasMobileApp.Infrastructure;
+using SemillitasMobileApp.Models;
 using SemillitasMobileApp.Services;
 
-namespace SemillitasMobileApp.Viewmodels;
+namespace SemillitasMobileApp.ViewModels;
 
-// CAMBIO: sin toolkit y sin columna de instructor (queda fuera por ahora)
+// Lectura de talleres: lo usan Disponibilidad y Agenda
 public class TalleresViewModel : ViewModelBase
 {
-    private readonly TalleresService _talleres = new();
+    TalleresService talleresService = new();
+    PeriodosService periodosService = new();
+
     private List<TallerDTO> _todos = new();
 
-    public TalleresViewModel()
+    private List<PeriodoDTO> _periodos = new();
+    public List<PeriodoDTO> Periodos { get => _periodos; set => SetField(ref _periodos, value); }
+
+    private PeriodoDTO? _periodoSeleccionado;
+    public PeriodoDTO? PeriodoSeleccionado
     {
-        CargarCommand = new AsyncRelayCommand(() => Ejecutar(Cargar));
-        NuevoTallerCommand = new AsyncRelayCommand(() => Shell.Current.GoToAsync(Rutas.TallerForm));
-        VerDetalleTallerCommand = new AsyncRelayCommand<TallerAdminFila>(fila =>
-            Shell.Current.GoToAsync(Rutas.TallerDetalle, new Dictionary<string, object> { ["Taller"] = fila.Taller }));
-        EditarTallerCommand = new AsyncRelayCommand<TallerAdminFila>(fila =>
-            Shell.Current.GoToAsync(Rutas.TallerForm, new Dictionary<string, object> { ["Taller"] = fila.Taller }));
-        EliminarTallerCommand = new AsyncRelayCommand<TallerAdminFila>(Eliminar);
+        get => _periodoSeleccionado;
+        set { if (SetField(ref _periodoSeleccionado, value)) Aplicar(); }
     }
 
-    public AsyncRelayCommand CargarCommand { get; }
-    public AsyncRelayCommand NuevoTallerCommand { get; }
-    public AsyncRelayCommand<TallerAdminFila> VerDetalleTallerCommand { get; }
-    public AsyncRelayCommand<TallerAdminFila> EditarTallerCommand { get; }
-    public AsyncRelayCommand<TallerAdminFila> EliminarTallerCommand { get; }
-
-    // Cada vez que se escribe en el buscador se vuelve a filtrar (sin ir al API)
     private string _textoBusqueda = "";
     public string TextoBusqueda
     {
         get => _textoBusqueda;
-        set { if (SetField(ref _textoBusqueda, value)) Filtrar(); }
+        set { if (SetField(ref _textoBusqueda, value)) Aplicar(); }
     }
 
-    private List<TallerAdminFila> _talleresLista = new();
-    public List<TallerAdminFila> Talleres { get => _talleresLista; set => SetField(ref _talleresLista, value); }
+    private int _conteoConCupo;
+    public int ConteoConCupo { get => _conteoConCupo; set => SetField(ref _conteoConCupo, value); }
 
-    private async Task Cargar()
+    private int _conteoPocos;
+    public int ConteoPocos { get => _conteoPocos; set => SetField(ref _conteoPocos, value); }
+
+    private int _conteoLlenos;
+    public int ConteoLlenos { get => _conteoLlenos; set => SetField(ref _conteoLlenos, value); }
+
+    private List<TallerFila> _disponibles = new();
+    public List<TallerFila> Disponibles { get => _disponibles; set => SetField(ref _disponibles, value); }
+
+    private List<FranjaFila> _franjas = new();
+    public List<FranjaFila> Franjas { get => _franjas; set => SetField(ref _franjas, value); }
+
+    public ICommand CargarCommand { get; }
+
+    public TalleresViewModel()
     {
-        _todos = await _talleres.GetAll();
-        Filtrar();
+        CargarCommand = new RelayCommand(_ => Cargar());
     }
 
-    private void Filtrar()
+    private async void Cargar()
     {
-        Talleres = _todos
-            .Where(t => string.IsNullOrWhiteSpace(TextoBusqueda) || Formato.Contiene(t.Nombre, TextoBusqueda))
-            .Select(t => new TallerAdminFila
-            {
-                Taller = t,
-                Nombre = t.Nombre,
-                Horario = Formato.Horario(t),
-                Cupo = t.Cupo.ToString(),
-                Costo = Formato.Dinero(t.Costo)
-            }).ToList();
-    }
-
-    private async Task Eliminar(TallerAdminFila fila)
-    {
-        if (!await Confirmar("Eliminar taller", $"¿Eliminar \"{fila.Nombre}\"?", "Eliminar")) return;
-
-        await Ejecutar(async () =>
+        if (IsBusy) return;
+        IsBusy = true;
+        try
         {
-            var errores = new ValidatorClass();
-            if (!await _talleres.Delete(fila.Taller.Id, errores))
+            _todos = await talleresService.GetAll();
+            var lista = await periodosService.GetAll();
+
+            // Se conserva el período elegido si sigue existiendo; si no, el más reciente
+            var idActual = PeriodoSeleccionado?.Id;
+            Periodos = lista;
+            PeriodoSeleccionado = lista.FirstOrDefault(p => p.Id == idActual) ?? lista.OrderBy(p => p.Id).LastOrDefault();
+            Aplicar();
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlert("Sin conexión", ex.Message, "Aceptar");
+        }
+        IsBusy = false;
+    }
+
+    private void Aplicar()
+    {
+        var delPeriodo = _todos.Where(t => t.IdPeriodo == PeriodoSeleccionado?.Id).ToList();
+
+        // Disponibilidad: filtrada por nombre
+        Disponibles = delPeriodo
+            .Where(t => string.IsNullOrWhiteSpace(TextoBusqueda) || Formato.Contiene(t.Nombre, TextoBusqueda))
+            .Select(t => new TallerFila(t))
+            .ToList();
+        ConteoConCupo = Disponibles.Count(f => f.Tono == "Verde");
+        ConteoPocos = Disponibles.Count(f => f.Tono == "Ambar");
+        ConteoLlenos = Disponibles.Count(f => f.Tono == "Rojo");
+
+        // Agenda: talleres con el mismo horario entre semana quedan juntos
+        Franjas = delPeriodo
+            .GroupBy(t => (t.HoraInicio, t.HoraFin))
+            .OrderBy(g => g.Key.HoraInicio).ThenBy(g => g.Key.HoraFin)
+            .Select(g => new FranjaFila
             {
-                await Avisar("No se pudo eliminar", string.Join("\n", errores.Errores));
-                return;
-            }
-            _todos.Remove(fila.Taller);
-            Filtrar();
-        });
+                Hora = Formato.Rango(g.Key.HoraInicio, g.Key.HoraFin),
+                Talleres = g.Select(t => new TallerFila(t)).ToList()
+            })
+            .ToList();
     }
 }

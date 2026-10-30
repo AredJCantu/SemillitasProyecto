@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Agenda (solo lectura): talleres del período por horario entre semana. BindingContext: TalleresViewModel.
+    Lee: Periodos, PeriodoSeleccionado, IsBusy, Franjas[Hora, Talleres[Nombre, Ocupacion, Categoria]]
+    Categoria = Arte | Deportes | Tecnología (solo para el color)
+    Command: CargarCommand (al aparecer)
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.ViewModels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SemillitasMobileApp.Views.AgendaView"
+             Title="Agenda"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.BindingContext>
+        <vm:TalleresViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.Resources>
+        <Color x:Key="Fondo">#F7F5EF</Color>
+        <Color x:Key="Blanco">#FFFFFF</Color>
+        <Color x:Key="Tinta">#1F2A24</Color>
+        <Color x:Key="TintaSuave">#5A655E</Color>
+        <Color x:Key="Linea">#E2DED2</Color>
+        <Color x:Key="BordeCampo">#CFCABB</Color>
+        <Color x:Key="Primario">#2A6F4F</Color>
+        <Color x:Key="VerdeFondo">#DDEFE4</Color>
+        <Color x:Key="VerdeTexto">#1E5A3D</Color>
+        <Color x:Key="RojoFondo">#F6D9D2</Color>
+        <Color x:Key="RojoTexto">#8E2A17</Color>
+
+        <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
+        <Style TargetType="Picker">
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style x:Key="Titulo" TargetType="Label">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Nota" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource Linea}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="Chip" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource BordeCampo}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="20" /></Setter.Value></Setter>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Selected">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+                                <Setter Property="Stroke" Value="{StaticResource Primario}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        <Style x:Key="BadgeBorder" TargetType="Border">
+            <Setter Property="HeightRequest" Value="28" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="HorizontalOptions" Value="End" />
+            <Setter Property="VerticalOptions" Value="Start" />
+            <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="14" /></Setter.Value></Setter>
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="BackgroundColor" Value="{StaticResource RojoFondo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="BadgeTexto" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="TextColor" Value="{StaticResource VerdeTexto}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Color x:Key="ArteFondo">#F6D9D2</Color>
+        <Color x:Key="ArteTexto">#8E2A17</Color>
+        <Color x:Key="DeportesFondo">#DDEFE4</Color>
+        <Color x:Key="DeportesTexto">#1E5A3D</Color>
+        <Color x:Key="TecnologiaFondo">#DCE6F7</Color>
+        <Color x:Key="TecnologiaTexto">#1F4A8A</Color>
+
+        <!-- Bloque de taller: el color cambia según Categoria -->
+        <Style x:Key="Evento" TargetType="Border">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="BackgroundColor" Value="{StaticResource ArteFondo}" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="10" /></Setter.Value></Setter>
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding Categoria}" Value="Deportes">
+                    <Setter Property="BackgroundColor" Value="{StaticResource DeportesFondo}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Border" Binding="{Binding Categoria}" Value="Tecnología">
+                    <Setter Property="BackgroundColor" Value="{StaticResource TecnologiaFondo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="EventoTexto" TargetType="Label">
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="TextColor" Value="{StaticResource ArteTexto}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding Categoria}" Value="Deportes">
+                    <Setter Property="TextColor" Value="{StaticResource DeportesTexto}" />
+                </DataTrigger>
+                <DataTrigger TargetType="Label" Binding="{Binding Categoria}" Value="Tecnología">
+                    <Setter Property="TextColor" Value="{StaticResource TecnologiaTexto}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="12" Padding="16,16,16,0" BackgroundColor="{StaticResource Fondo}">
+
+        <!-- Título + período -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" ColumnSpacing="12">
+            <Label Text="Agenda" Style="{StaticResource Titulo}" VerticalOptions="Center" />
+            <Picker Grid.Column="1" ItemsSource="{Binding Periodos}"
+                    SelectedItem="{Binding PeriodoSeleccionado}" Title="Período" WidthRequest="150" />
+        </Grid>
+
+        <!-- Franjas -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="10" Padding="0,0,0,16" BindableLayout.ItemsSource="{Binding Franjas}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Tarjeta}">
+                            <VerticalStackLayout Spacing="10">
+                                <Label Text="{Binding Hora}" FontSize="16" FontAttributes="Bold" />
+                                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Talleres}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource Evento}">
+                                                <VerticalStackLayout Spacing="2">
+                                                    <Label Text="{Binding Nombre}" Style="{StaticResource EventoTexto}" />
+                                                    <Label Text="{Binding Ocupacion}" Style="{StaticResource EventoTexto}"
+                                                           FontAttributes="None" FontSize="12" />
+                                                </VerticalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           Color="{StaticResource Primario}" HorizontalOptions="Center" VerticalOptions="Center" />
+    </Grid>
+</ContentPage>
