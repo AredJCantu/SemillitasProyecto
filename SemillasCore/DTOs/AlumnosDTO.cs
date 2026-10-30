@@ -14,8 +14,7 @@ namespace SemillasCore.DTOs
         public string Apellido { get; set; } = null!;
         //[Required(ErrorMessage = "Especifique el tutor del taller")]
         public string NombreTutor { get; set; } = null!;
-        //[Required(ErrorMessage = "Ingrese el telefono del tutor")]
-        //[Phone]
+        [Phone]
         public string Telefono { get; set; } = null!; 
     }
     public class AlumnoDTO:CreateAlumnoDTO {

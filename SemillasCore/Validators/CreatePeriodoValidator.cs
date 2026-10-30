@@ -17,6 +17,10 @@ namespace SemillasCore.Validators
                 res.Errores.Add("Mes de cierre inválido. \n Ingrese un mes del año en numero entero.");
             if (dto.Año <= 2000 || dto.Año > 2100)
                 res.Errores.Add("Año inválido. \n Ingrese un año mayor a 2000 y menor a 2100");
+            if (dto.MesInicio > dto.MesFin)
+                res.Errores.Add("El mes de inicio debe ser menor que el mes de fin");
+            if (dto.Año < DateTime.Now.Year)
+                res.Errores.Add("El año debe ser mayor que el actual");
             return res;
         }
     }

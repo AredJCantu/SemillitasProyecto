@@ -63,19 +63,19 @@
                     <UniformGrid Columns="2">
                         <StackPanel Margin="0,0,10,10">
                             <TextBlock Text="Nombre" Style="{StaticResource Etiqueta}" />
-                            <TextBox Text="{Binding NombreAlumno, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox IsEnabled="False" Text="{Binding NombreAlumno, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Margin="10,0,0,10">
                             <TextBlock Text="Apellidos" Style="{StaticResource Etiqueta}" />
-                            <TextBox Text="{Binding ApellidoAlumno, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox IsEnabled="False" Text="{Binding ApellidoAlumno, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Margin="0,0,10,0">
                             <TextBlock Text="Nombre del tutor" Style="{StaticResource Etiqueta}" />
-                            <TextBox Text="{Binding NombreTutor, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox IsEnabled="False" Text="{Binding NombreTutor, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Margin="10,0,0,0">
                             <TextBlock Text="Teléfono" Style="{StaticResource Etiqueta}" />
-                            <TextBox Text="{Binding TelefonoAlumno, UpdateSourceTrigger=PropertyChanged}" />
+                            <TextBox IsEnabled="False" Text="{Binding TelefonoAlumno, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                     </UniformGrid>
                 </StackPanel>
