@@ -12,19 +12,19 @@ namespace SemillasCore.DTOs
     //[PeriodoEmpezadoValidator]
     //[SinCupoValidator]
     public class CreateInscripcionesDTO {
-        [Required(ErrorMessage = "Favor de seleccionar un alumno para la inscripción.")]
+        //[Required(ErrorMessage = "Favor de seleccionar un alumno para la inscripción.")]
         public int IdAlumno { get; set; }
-        [Required(ErrorMessage = "Favor de seleccionar a que taller desea inscribirse.")]
+        //[Required(ErrorMessage = "Favor de seleccionar a que taller desea inscribirse.")]
         public int IdTaller { get; set; }
-        [Required]
+        //[Required]
         public bool? Debe { get; set; }
     }
     public class InscripcionesDTO:CreateInscripcionesDTO {
         public int Id { get; set; }
     }
     public class EditInscripcionesDTO : CreateInscripcionesDTO {
-    
-     }
+        public int Id { get; set; }
+    }
     public class DatosInscripcionesDTO
     {
         public int Id { get; set; }

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Alumnos (solo lectura). BindingContext: AlumnosViewModel.
+    Lee: TextoBusqueda, IsBusy, Alumnos[NombreCompleto, Tutor, Telefono, CantidadTalleres, Estado, Tono]
+    Estado = Debe | Al corriente; Tono = Rojo | Verde
+    Command: CargarCommand (al aparecer)
+-->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:vm="clr-namespace:SemillitasMobileApp.ViewModels"
+             xmlns:b="clr-namespace:SemillitasMobileApp.Behaviors"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SemillitasMobileApp.Views.AlumnosView"
+             Title="Alumnos"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.BindingContext>
+        <vm:AlumnosViewModel />
+    </ContentPage.BindingContext>
+    <ContentPage.Behaviors>
+        <b:AlAparecerBehavior Command="{Binding CargarCommand}" />
+    </ContentPage.Behaviors>
+
+    <ContentPage.Resources>
+        <Color x:Key="Fondo">#F7F5EF</Color>
+        <Color x:Key="Blanco">#FFFFFF</Color>
+        <Color x:Key="Tinta">#1F2A24</Color>
+        <Color x:Key="TintaSuave">#5A655E</Color>
+        <Color x:Key="Linea">#E2DED2</Color>
+        <Color x:Key="BordeCampo">#CFCABB</Color>
+        <Color x:Key="Primario">#2A6F4F</Color>
+        <Color x:Key="VerdeFondo">#DDEFE4</Color>
+        <Color x:Key="VerdeTexto">#1E5A3D</Color>
+        <Color x:Key="RojoFondo">#F6D9D2</Color>
+        <Color x:Key="RojoTexto">#8E2A17</Color>
+
+        <Style TargetType="Label"><Setter Property="TextColor" Value="{StaticResource Tinta}" /></Style>
+        <Style TargetType="Picker">
+            <Setter Property="TextColor" Value="{StaticResource Tinta}" />
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style x:Key="Titulo" TargetType="Label">
+            <Setter Property="FontSize" Value="24" />
+            <Setter Property="FontAttributes" Value="Bold" />
+        </Style>
+        <Style x:Key="Nota" TargetType="Label">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="TextColor" Value="{StaticResource TintaSuave}" />
+        </Style>
+        <Style x:Key="Tarjeta" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource Linea}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="16" /></Setter.Value></Setter>
+        </Style>
+        <Style x:Key="Chip" TargetType="Border">
+            <Setter Property="BackgroundColor" Value="{StaticResource Blanco}" />
+            <Setter Property="Stroke" Value="{StaticResource BordeCampo}" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="HeightRequest" Value="40" />
+            <Setter Property="Padding" Value="16,0" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="20" /></Setter.Value></Setter>
+            <Setter Property="VisualStateManager.VisualStateGroups">
+                <VisualStateGroupList>
+                    <VisualStateGroup x:Name="CommonStates">
+                        <VisualState x:Name="Normal" />
+                        <VisualState x:Name="Selected">
+                            <VisualState.Setters>
+                                <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+                                <Setter Property="Stroke" Value="{StaticResource Primario}" />
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateGroupList>
+            </Setter>
+        </Style>
+        <Style x:Key="BadgeBorder" TargetType="Border">
+            <Setter Property="HeightRequest" Value="28" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="StrokeThickness" Value="0" />
+            <Setter Property="HorizontalOptions" Value="End" />
+            <Setter Property="VerticalOptions" Value="Start" />
+            <Setter Property="BackgroundColor" Value="{StaticResource VerdeFondo}" />
+            <Setter Property="StrokeShape"><Setter.Value><RoundRectangle CornerRadius="14" /></Setter.Value></Setter>
+            <Style.Triggers>
+                <DataTrigger TargetType="Border" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="BackgroundColor" Value="{StaticResource RojoFondo}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="BadgeTexto" TargetType="Label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontAttributes" Value="Bold" />
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="TextColor" Value="{StaticResource VerdeTexto}" />
+            <Style.Triggers>
+                <DataTrigger TargetType="Label" Binding="{Binding Tono}" Value="Rojo">
+                    <Setter Property="TextColor" Value="{StaticResource RojoTexto}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12" Padding="16,16,16,0" BackgroundColor="{StaticResource Fondo}">
+
+        <Label Text="Alumnos" Style="{StaticResource Titulo}" />
+
+        <SearchBar Grid.Row="1" Text="{Binding TextoBusqueda}" Placeholder="Buscar alumno, tutor o teléfono" />
+
+        <!-- Lista de tarjetas -->
+        <CollectionView Grid.Row="2" ItemsSource="{Binding Alumnos}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <Label Text="No hay alumnos que coincidan." Style="{StaticResource Nota}"
+                       HorizontalOptions="Center" Margin="0,40" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Style="{StaticResource Tarjeta}">
+                        <VerticalStackLayout Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding NombreCompleto}" FontSize="17" FontAttributes="Bold" />
+                                    <Label Text="{Binding Tutor, StringFormat='Tutor: {0}'}" Style="{StaticResource Nota}" />
+                                </VerticalStackLayout>
+                                <Border Grid.Column="1" Style="{StaticResource BadgeBorder}">
+                                    <Label Text="{Binding Estado}" Style="{StaticResource BadgeTexto}" />
+                                </Border>
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding Telefono}" Style="{StaticResource Nota}" VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding CantidadTalleres, StringFormat='{0} talleres'}"
+                                       Style="{StaticResource Nota}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"
+                           Color="{StaticResource Primario}" HorizontalOptions="Center" VerticalOptions="Center" />
+    </Grid>
+</ContentPage>

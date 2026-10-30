@@ -10,7 +10,8 @@ namespace SemillitasProyecto.Mappers
                 Id= entity.Id,
                 MesInicio = entity.MesInicio,
                 MesFin=entity.MesFin,
-                Año=entity.Año
+                Año=entity.Año,
+                NombreTalleres=entity.Talleres.Select(x=>x.ToNombreTalleresDTO())
             };
             return dto;
         }

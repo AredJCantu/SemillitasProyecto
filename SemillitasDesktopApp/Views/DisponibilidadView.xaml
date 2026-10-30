@@ -1,0 +1,97 @@
+<!--
+    Disponibilidad de talleres del período (DataContext: TalleresViewModel).
+    Lee: Periodos, PeriodoSeleccionado, TextoBusqueda, SoloConCupo, ConteoConCupo, ConteoPocos, ConteoLlenos,
+         Disponibles[Nombre, Categoria, Costo, Horario, HorarioSabado, Ocupacion, Porcentaje, Badge, Tono, TieneCupo]
+    Commands: InscribirCommand (fila)
+-->
+<UserControl x:Class="SemillitasDesktopApp.Views.DisponibilidadView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Encabezado -->
+        <DockPanel Margin="0,0,0,16">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <TextBlock Text="Período" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox ItemsSource="{Binding Periodos}" SelectedItem="{Binding PeriodoSeleccionado}" Width="150" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Disponibilidad de talleres" Style="{StaticResource Titulo}" />
+                <TextBlock Text="Lugares que quedan en cada taller del período." Style="{StaticResource Subtitulo}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Filtros y contadores -->
+        <DockPanel Grid.Row="1" Margin="0,0,0,14">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Border Background="{StaticResource VerdeFondo}" CornerRadius="14" Padding="12,5" Margin="6,0,0,0">
+                    <TextBlock Text="{Binding ConteoConCupo, StringFormat={}{0} con cupo}" Foreground="{StaticResource VerdeTexto}" FontWeight="SemiBold" />
+                </Border>
+                <Border Background="{StaticResource AmbarFondo}" CornerRadius="14" Padding="12,5" Margin="6,0,0,0">
+                    <TextBlock Text="{Binding ConteoPocos, StringFormat={}{0} con pocos lugares}" Foreground="{StaticResource AmbarTexto}" FontWeight="SemiBold" />
+                </Border>
+                <Border Background="{StaticResource RojoFondo}" CornerRadius="14" Padding="12,5" Margin="6,0,0,0">
+                    <TextBlock Text="{Binding ConteoLlenos, StringFormat={}{0} llenos}" Foreground="{StaticResource RojoTexto}" FontWeight="SemiBold" />
+                </Border>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Buscar" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBox Text="{Binding TextoBusqueda, UpdateSourceTrigger=PropertyChanged}" Width="260" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Tabla -->
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Disponibles}" RowHeight="56">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Header="TALLER" Width="2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Nombre}" FontWeight="SemiBold" />
+                                <TextBlock Style="{StaticResource Nota}">
+                                    <Run Text="{Binding Categoria, Mode=OneWay}" /> · <Run Text="{Binding Costo, Mode=OneWay}" />
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="ENTRE SEMANA" Binding="{Binding Horario}" Width="*" />
+                <DataGridTextColumn Header="SÁBADO" Binding="{Binding HorarioSabado}" Width="*" />
+                <DataGridTemplateColumn Header="INSCRITOS / MÁXIMO" Width="1.3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <ProgressBar Value="{Binding Porcentaje, Mode=OneWay}" Maximum="100" Height="6"
+                                             Foreground="{StaticResource Primario}" Background="{StaticResource Linea}" BorderThickness="0" />
+                                <TextBlock Text="{Binding Ocupacion}" Style="{StaticResource Nota}" Margin="0,3,0,0" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="ESTADO" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Badge}">
+                                <TextBlock Text="{Binding Badge}" Style="{StaticResource BadgeTexto}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="120">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Inscribir" Style="{StaticResource BotonPrimario}" IsEnabled="{Binding TieneCupo}"
+                                    Command="{Binding DataContext.InscribirCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

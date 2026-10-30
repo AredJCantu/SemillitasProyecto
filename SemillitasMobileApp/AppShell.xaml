@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+    App móvil de solo lectura: barra de pestañas inferior con 4 secciones.
+    Los cambios (altas, ediciones, bajas, pagos) se hacen en la app de escritorio.
+-->
 <Shell
     x:Class="SemillitasMobileApp.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:SemillitasMobileApp"
-    Title="SemillitasMobileApp">
+    xmlns:views="clr-namespace:SemillitasMobileApp.Views"
+    FlyoutBehavior="Disabled"
+    Title="Semillitas">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent Title="Disponibilidad" ContentTemplate="{DataTemplate views:DisponibilidadView}" Route="DisponibilidadView" />
+        <ShellContent Title="Cobranza" ContentTemplate="{DataTemplate views:CobranzaView}" Route="CobranzaView" />
+        <ShellContent Title="Agenda" ContentTemplate="{DataTemplate views:AgendaView}" Route="AgendaView" />
+        <ShellContent Title="Alumnos" ContentTemplate="{DataTemplate views:AlumnosView}" Route="AlumnosView" />
+    </TabBar>
 
 </Shell>

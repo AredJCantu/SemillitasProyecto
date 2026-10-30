@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SemillasCore.DTOs;
 using SemillitasProyecto.Services;
+using SemillitasProyecto.Validators;
 
 namespace SemillitasProyecto.Controllers
 {
@@ -10,12 +11,19 @@ namespace SemillitasProyecto.Controllers
     [ApiController]
     public class PeriodosController : ControllerBase
     {
-        public PeriodosController(PeriodoServices service)
+        public PeriodosController(PeriodoServices service,PeriodoExistenteValidator createValidator,PeriodoExistenteEdit editValidator
+            ,PeriodoConTalleresValidator deleteValidator)
         {
             Service = service;
+            CreateValidator = createValidator;
+            EditValidator = editValidator;
+            DeleteValidator = deleteValidator;
         }
 
         public PeriodoServices Service { get; }
+        public PeriodoExistenteValidator CreateValidator { get; }
+        public PeriodoExistenteEdit EditValidator { get; }
+        public PeriodoConTalleresValidator DeleteValidator { get; }
 
         [HttpGet]
         public IActionResult GetAll() {
@@ -35,31 +43,45 @@ namespace SemillitasProyecto.Controllers
             }
             return NotFound();
         }
+
         [HttpPost]
         public IActionResult Post(CreatePeriodoDTO dto) {
-            var data = Service.Create(dto);
-            if (data != null)
+            var resultado = CreateValidator.IsValid(dto);
+            if (resultado.EsValido)
             {
-                return Created("api/periodos",data);
+                var data = Service.Create(dto);
+                return Created("api/periodos", data);
             }
-            return BadRequest();
+            return BadRequest(resultado.Errores);
         }
+
         [HttpPut("{id:int}")]
         public IActionResult Put(EditPeriodoDTO dto,int id) {
-            var data = Service.Update(dto,id);
-            if (data != null)
+            dto.Id = id;
+            var resultado = EditValidator.IsValid(dto);
+            if (resultado.EsValido)
             {
-                return Ok(data);
+                var data = Service.Update(dto);
+                if (data != null)
+                {
+                    return Ok(data);
+                }
+                return NotFound();
             }
-            return BadRequest();
+            return BadRequest(resultado.Errores);
         }
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id) {
-            if (Service.Delete(id))
+            var resultado = DeleteValidator.IsValid(id);
+            if (resultado.EsValido)
             {
-                return Ok();
+                if (Service.Delete(id))
+                {
+                    return Ok();
+                }
+                return NotFound();
             }
-            return NotFound();
+            return BadRequest(resultado.Errores);
         }
 
     }

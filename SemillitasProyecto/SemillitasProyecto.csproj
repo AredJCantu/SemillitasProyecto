@@ -18,8 +18,4 @@
     <ProjectReference Include="..\SemillasCore\SemillasCore.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Commons\" />
-  </ItemGroup>
-
 </Project>

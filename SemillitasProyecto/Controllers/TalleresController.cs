@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SemillasCore.DTOs;
+using SemillasCore.Validators;
 using SemillitasProyecto.Services;
+using SemillitasProyecto.Validators;
 
 namespace SemillitasProyecto.Controllers
 {
@@ -9,9 +11,17 @@ namespace SemillitasProyecto.Controllers
     [ApiController]
     public class TalleresController : ControllerBase
     {
-        public TalleresController(TalleresServices servicio)
+        private readonly CreateTallerValidator createValidator;
+        private readonly EditTallerValidator editValidator;
+        private readonly TallerConInscripciones deleteValidator;
+
+        public TalleresController(TalleresServices servicio,CreateTallerValidator createValidator, TallerExistenteEditValidator editValidator,
+            TallerConInscripciones deleteValidator)
         {
             Servicio = servicio;
+            this.createValidator = createValidator;
+            this.editValidator = editValidator;
+            this.deleteValidator = deleteValidator;
         }
 
         public TalleresServices Servicio { get; }
@@ -21,6 +31,14 @@ namespace SemillitasProyecto.Controllers
             return Ok(Servicio.GetAll());
         }
         [HttpGet("{id:int}")]
+        public IActionResult GetById(int id) {
+            var data = Servicio.GetById(id);
+            if (data != null) {
+                return Ok(data);
+            }
+            return NotFound();
+        }
+        [HttpGet("datos/{id:int}")]
         public IActionResult GetDatosById(int id) {
             var data = Servicio.GetDatosById(id);
             if (data != null)
@@ -29,33 +47,68 @@ namespace SemillitasProyecto.Controllers
             }
             return NotFound();
         }
+        [HttpGet("populares/")]
+        public IActionResult GetPopulares() {
+            var data = Servicio.GetPopulares();
+            return Ok(data);
+        }
+        [HttpGet("Cupo/")]
+        public IActionResult GetTalleresCupo() {
+            var data = Servicio.DisponibilidadTalleres();
+            return Ok(data);
+        }
+        [HttpGet("PocoCupo/")]
+        public IActionResult GetTalleresPocoCupo()
+        {
+            var data = Servicio.PocaDisponibilidadTalleres();
+            return Ok(data);
+        }
+        [HttpGet("SinCupo/")]
+        public IActionResult GetTalleresSinCupo()
+        {
+            var data = Servicio.LLenosTalleres();
+            return Ok(data);
+        }
         [HttpPost]
         public IActionResult Post(CreateTallerDTO dto) {
-            var data = Servicio.Create(dto);
-            if (data != null)
+            var resultado = createValidator.IsValid(dto);
+            if (resultado.EsValido)
             {
-                return Created("api/talleres",data);
+                var data = Servicio.Create(dto);
+                return Created("api/talleres", data);
             }
-            return BadRequest();
+            return BadRequest(resultado.Errores);
         }
         [HttpPut("{id:int}")]
         public IActionResult Put(EditTallerDTO dto,int id) {
-            var data = Servicio.Update(dto, id);
-            if (data != null)
+            dto.Id = id;
+            var resultado = editValidator.IsValid(dto);
+            if (resultado.EsValido)
             {
-                return Ok(data);
+                var data = Servicio.Update(dto);
+                if (data != null)
+                {
+                    return Ok(data);
+                }
+                return NotFound();
             }
-            return NotFound();
+            return BadRequest(resultado.Errores);
         }
 
         [HttpDelete("{id:int}")]
         public IActionResult Delete(int id) {
-            if(Servicio.Delete(id))
+            var resultado = deleteValidator.IsValid(id);
+            if (resultado.EsValido)
             {
-                return Ok();
+                if (Servicio.Delete(id))
+                {
+                    return Ok();
+                }
+                return NotFound();
             }
-            return NotFound();
+            return BadRequest(resultado.Errores);
         }
+        
 
     }
 }

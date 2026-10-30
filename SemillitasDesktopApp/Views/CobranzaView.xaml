@@ -1,0 +1,87 @@
+<!--
+    Cobranza del período (DataContext: InscripcionesViewModel).
+    Lee: Periodos, PeriodoSeleccionado, Cobrado, PorCobrar, AlumnosConAdeudo, Filtros, FiltroSeleccionado, TextoBusquedaCobro,
+         Cobros[Tutor, Alumno, Taller, Costo, Estado, Tono, PuedeMarcarPago]
+    El costo de cada fila sale del taller de la inscripción.
+    Commands: MarcarPagadoCommand (fila)
+-->
+<UserControl x:Class="SemillitasDesktopApp.Views.CobranzaView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,16">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                <TextBlock Text="Período" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                <ComboBox ItemsSource="{Binding Periodos}" SelectedItem="{Binding PeriodoSeleccionado}" Width="150" />
+            </StackPanel>
+            <StackPanel>
+                <TextBlock Text="Cobranza" Style="{StaticResource Titulo}" />
+                <TextBlock Text="Quién pagó y quién debe en el período." Style="{StaticResource Subtitulo}" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Totales -->
+        <UniformGrid Grid.Row="1" Columns="3" Margin="0,0,0,16">
+            <Border Style="{StaticResource Tarjeta}" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Text="COBRADO" Style="{StaticResource Nota}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding Cobrado}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource VerdeTexto}" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Tarjeta}" Margin="4,0">
+                <StackPanel>
+                    <TextBlock Text="POR COBRAR" Style="{StaticResource Nota}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding PorCobrar}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource RojoTexto}" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Tarjeta}" Margin="8,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="ALUMNOS CON ADEUDO" Style="{StaticResource Nota}" FontWeight="Bold" />
+                    <TextBlock Text="{Binding AlumnosConAdeudo}" FontSize="24" FontWeight="Bold" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,14">
+            <TextBlock Text="Mostrar" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" Margin="0,0,8,0" />
+            <ComboBox ItemsSource="{Binding Filtros}" SelectedItem="{Binding FiltroSeleccionado}" Width="150" />
+            <TextBlock Text="Buscar" Style="{StaticResource Etiqueta}" VerticalAlignment="Center" Margin="20,0,8,0" />
+            <TextBox Text="{Binding TextoBusquedaCobro, UpdateSourceTrigger=PropertyChanged}" Width="280" />
+        </StackPanel>
+
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Cobros}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="TUTOR" Binding="{Binding Tutor}" Width="1.5*" FontWeight="SemiBold" />
+                <DataGridTextColumn Header="ALUMNO" Binding="{Binding Alumno}" Width="1.5*" />
+                <DataGridTextColumn Header="TALLER" Binding="{Binding Taller}" Width="1.5*" />
+                <DataGridTextColumn Header="COSTO" Binding="{Binding Costo}" Width="90" />
+                <DataGridTemplateColumn Header="ESTADO" Width="130">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Badge}">
+                                <TextBlock Text="{Binding Estado}" Style="{StaticResource BadgeTexto}" />
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Marcar pagado" Style="{StaticResource BotonSecundario}"
+                                    Visibility="{Binding PuedeMarcarPago, Converter={StaticResource BoolAVisible}}"
+                                    Command="{Binding DataContext.MarcarPagadoCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>
